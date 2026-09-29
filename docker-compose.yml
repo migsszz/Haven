@@ -1,0 +1,46 @@
+# Local:      cp .env.example .env   (set JWT_SECRET), then  docker compose up --build
+# On a server: the CI pipeline sets IMAGE_PREFIX/IMAGE_TAG and runs  docker compose pull && docker compose up -d
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: haven
+      POSTGRES_USER: haven
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-haven}
+    ports:
+      # Localhost only, so the Flask dev server can reach it; never exposed publicly.
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      # Schema and seed data run once, on the first start with an empty volume.
+      - ./api/db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U haven -d haven"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./api
+    image: ${IMAGE_PREFIX:-haven}-api:${IMAGE_TAG:-local}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://haven:${POSTGRES_PASSWORD:-haven}@db:5432/haven
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (at least 32 characters)}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./web
+    image: ${IMAGE_PREFIX:-haven}-web:${IMAGE_TAG:-local}
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    depends_on:
+      - api
+
+volumes:
+  db-data:
