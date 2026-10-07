@@ -1,5 +1,5 @@
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
@@ -31,6 +31,8 @@ describe('App', () => {
   it('shows the brand and the cart count', async () => {
     TestBed.inject(CartService).add(product, 2);
     const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    TestBed.inject(HttpTestingController).expectOne('/api/assistant/status').flush({ enabled: false });
     await fixture.whenStable();
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
     expect(text).toContain('Haven');

@@ -4,6 +4,7 @@ import click
 from flask import Flask, jsonify
 from pydantic import ValidationError
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import generate_password_hash
 
 from . import db
@@ -16,21 +17,31 @@ def create_app(config: dict | None = None) -> Flask:
         DATABASE_URL=os.environ.get("DATABASE_URL", "postgresql://haven:haven@localhost:5432/haven"),
         JWT_SECRET=os.environ.get("JWT_SECRET"),
         JWT_TTL_HOURS=int(os.environ.get("JWT_TTL_HOURS", "8")),
+        # Optional: without a key the assistant endpoints report it as disabled.
+        GEMINI_API_KEY=os.environ.get("GEMINI_API_KEY"),
+        GEMINI_MODEL=os.environ.get("GEMINI_MODEL", "gemini-flash-latest"),
     )
     if config:
         app.config.update(config)
     if len(app.config["JWT_SECRET"] or "") < 32:
         raise RuntimeError("JWT_SECRET must be set to at least 32 characters")
 
+    # nginx sits in front of the API; trust its X-Forwarded-For so request.remote_addr
+    # is the shopper's address (used by the assistant's rate limit).
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
+
     db.init_app(app)
 
+    from . import assistant
     from .auth import bp as auth_bp
     from .orders import bp as orders_bp
     from .products import bp as products_bp
 
+    assistant.init_app(app)
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(products_bp, url_prefix="/api")
     app.register_blueprint(orders_bp, url_prefix="/api")
+    app.register_blueprint(assistant.bp, url_prefix="/api/assistant")
 
     @app.get("/api/health")
     def health():

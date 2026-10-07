@@ -41,18 +41,37 @@ def _issue_token(user: dict) -> str:
     return jwt.encode(payload, current_app.config["JWT_SECRET"], algorithm="HS256")
 
 
+def _authenticate(required: bool) -> None:
+    """Sets g.user_id / g.is_admin from the bearer token (None / False for guests)."""
+    g.user_id, g.is_admin = None, False
+    header = request.headers.get("Authorization", "")
+    if not header.startswith("Bearer "):
+        if required:
+            raise ApiError(401, "Sign in required")
+        return
+    try:
+        claims = jwt.decode(header[7:], current_app.config["JWT_SECRET"], algorithms=["HS256"])
+    except jwt.InvalidTokenError:
+        raise ApiError(401, "Session expired, please sign in again")
+    g.user_id = int(claims["sub"])
+    g.is_admin = bool(claims.get("admin"))
+
+
 def require_auth(view):
     @wraps(view)
     def wrapper(*args, **kwargs):
-        header = request.headers.get("Authorization", "")
-        if not header.startswith("Bearer "):
-            raise ApiError(401, "Sign in required")
-        try:
-            claims = jwt.decode(header[7:], current_app.config["JWT_SECRET"], algorithms=["HS256"])
-        except jwt.InvalidTokenError:
-            raise ApiError(401, "Session expired, please sign in again")
-        g.user_id = int(claims["sub"])
-        g.is_admin = bool(claims.get("admin"))
+        _authenticate(required=True)
+        return view(*args, **kwargs)
+
+    return wrapper
+
+
+def optional_auth(view):
+    """Guests are allowed; a signed-in user is identified. A bad token is still a 401."""
+
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        _authenticate(required=False)
         return view(*args, **kwargs)
 
     return wrapper

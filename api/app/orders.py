@@ -53,7 +53,7 @@ def _serialize_order(order: dict, items: list[dict]) -> dict:
     }
 
 
-def _load_orders(conn, where: str, params: list) -> list[dict]:
+def load_orders(conn, where: str, params: list) -> list[dict]:
     orders = conn.execute(
         f"""
         SELECT o.*, u.email FROM orders o JOIN users u ON u.id = o.user_id
@@ -152,7 +152,7 @@ def create_order():
                 "UPDATE products SET stock = stock - %s, updated_at = now() WHERE id = %s",
                 [(quantities[pid], pid) for pid in product_ids],
             )
-        created = _load_orders(conn, "WHERE o.id = %s", [order["id"]])[0]
+        created = load_orders(conn, "WHERE o.id = %s", [order["id"]])[0]
 
     return created, 201
 
@@ -162,14 +162,14 @@ def create_order():
 @require_auth
 def my_orders():
     with db.connection() as conn:
-        return _load_orders(conn, "WHERE o.user_id = %s", [g.user_id])
+        return load_orders(conn, "WHERE o.user_id = %s", [g.user_id])
 
 
 @bp.get("/orders/<int:order_id>")
 @require_auth
 def get_order(order_id: int):
     with db.connection() as conn:
-        orders = _load_orders(conn, "WHERE o.id = %s AND (o.user_id = %s OR %s)", [order_id, g.user_id, g.is_admin])
+        orders = load_orders(conn, "WHERE o.id = %s AND (o.user_id = %s OR %s)", [order_id, g.user_id, g.is_admin])
     if not orders:
         raise ApiError(404, "Order not found")
     return orders[0]
@@ -189,7 +189,7 @@ def cancel_order(order_id: int):
             raise ApiError(409, "Only orders that haven't shipped can be cancelled")
         conn.execute("UPDATE orders SET status = 'cancelled', updated_at = now() WHERE id = %s", (order_id,))
         _restock(conn, order_id)
-        return _load_orders(conn, "WHERE o.id = %s", [order_id])[0]
+        return load_orders(conn, "WHERE o.id = %s", [order_id])[0]
 
 
 @bp.get("/admin/orders")
@@ -200,8 +200,8 @@ def admin_list_orders():
         if status:
             if status not in TRANSITIONS:
                 raise ApiError(400, f"'status' must be one of: {', '.join(TRANSITIONS)}")
-            return _load_orders(conn, "WHERE o.status = %s", [status])
-        return _load_orders(conn, "", [])
+            return load_orders(conn, "WHERE o.status = %s", [status])
+        return load_orders(conn, "", [])
 
 
 @bp.patch("/admin/orders/<int:order_id>")
@@ -217,4 +217,4 @@ def admin_update_status(order_id: int):
         conn.execute("UPDATE orders SET status = %s, updated_at = now() WHERE id = %s", (body.status, order_id))
         if body.status == "cancelled":
             _restock(conn, order_id)
-        return _load_orders(conn, "WHERE o.id = %s", [order_id])[0]
+        return load_orders(conn, "WHERE o.id = %s", [order_id])[0]

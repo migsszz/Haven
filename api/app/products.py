@@ -66,7 +66,7 @@ def _int_arg(name: str, default: int, minimum: int, maximum: int) -> int:
     return max(minimum, min(value, maximum))
 
 
-def _fetch_product(conn, where: str, value) -> dict | None:
+def fetch_product(conn, where: str, value) -> dict | None:
     return conn.execute(
         f"SELECT {PRODUCT_COLUMNS} FROM products p JOIN categories c ON c.id = p.category_id WHERE {where}",
         (value,),
@@ -88,25 +88,33 @@ def list_categories():
     return [{"slug": r["slug"], "name": r["name"], "productCount": r["product_count"]} for r in rows]
 
 
-def _search_products(include_inactive: bool):
-    q = request.args.get("q", "").strip()
-    category = request.args.get("category", "").strip()
-    sort = request.args.get("sort", "newest")
+def search_products(
+    q: str = "",
+    category: str = "",
+    sort: str = "newest",
+    page: int = 1,
+    page_size: int = 12,
+    max_price_cents: int | None = None,
+    include_inactive: bool = False,
+) -> dict:
+    """Shared by the catalog endpoints and the assistant's search tool."""
     if sort not in SORTS:
         raise ApiError(400, f"'sort' must be one of: {', '.join(SORTS)}")
-    page = _int_arg("page", 1, 1, 10_000)
-    page_size = _int_arg("pageSize", 12, 1, MAX_PAGE_SIZE)
 
     conditions, params = [], []
     if not include_inactive:
         conditions.append("p.is_active")
-    if q:
-        conditions.append("(p.name ILIKE %s OR p.description ILIKE %s)")
-        pattern = f"%{q}%"
-        params += [pattern, pattern]
+    # Every word has to appear somewhere, so "water bottle" finds "Insulated Water Bottle".
+    for word in q.split()[:8]:
+        conditions.append("(p.name ILIKE %s OR p.description ILIKE %s OR c.name ILIKE %s)")
+        pattern = f"%{word}%"
+        params += [pattern, pattern, pattern]
     if category:
         conditions.append("c.slug = %s")
         params.append(category)
+    if max_price_cents is not None:
+        conditions.append("p.price_cents <= %s")
+        params.append(max_price_cents)
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
     with db.connection() as conn:
@@ -130,15 +138,28 @@ def _search_products(include_inactive: bool):
     }
 
 
+def _search_from_request(include_inactive: bool) -> dict:
+    max_price = request.args.get("maxPrice")
+    return search_products(
+        q=request.args.get("q", "").strip(),
+        category=request.args.get("category", "").strip(),
+        sort=request.args.get("sort", "newest"),
+        page=_int_arg("page", 1, 1, 10_000),
+        page_size=_int_arg("pageSize", 12, 1, MAX_PAGE_SIZE),
+        max_price_cents=_int_arg("maxPrice", 0, 0, 10_000_000) if max_price else None,
+        include_inactive=include_inactive,
+    )
+
+
 @bp.get("/products")
 def list_products():
-    return _search_products(include_inactive=False)
+    return _search_from_request(include_inactive=False)
 
 
 @bp.get("/products/<slug>")
 def get_product(slug: str):
     with db.connection() as conn:
-        row = _fetch_product(conn, "p.slug = %s AND p.is_active", slug)
+        row = fetch_product(conn, "p.slug = %s AND p.is_active", slug)
     if not row:
         raise ApiError(404, "Product not found")
     return serialize_product(row)
@@ -147,7 +168,7 @@ def get_product(slug: str):
 @bp.get("/admin/products")
 @require_admin
 def admin_list_products():
-    return _search_products(include_inactive=True)
+    return _search_from_request(include_inactive=True)
 
 
 def _category_id(conn, slug: str) -> int:
@@ -180,7 +201,7 @@ def admin_create_product():
                     body.is_active,
                 ),
             ).fetchone()["id"]
-            row = _fetch_product(conn, "p.id = %s", product_id)
+            row = fetch_product(conn, "p.id = %s", product_id)
     except UniqueViolation:
         raise ApiError(409, f"A product with slug '{body.slug}' already exists")
     return serialize_product(row), 201
@@ -208,5 +229,5 @@ def admin_update_product(product_id: int):
             raise ApiError(422, "Unknown category")
         if not updated:
             raise ApiError(404, "Product not found")
-        row = _fetch_product(conn, "p.id = %s", product_id)
+        row = fetch_product(conn, "p.id = %s", product_id)
     return serialize_product(row)
