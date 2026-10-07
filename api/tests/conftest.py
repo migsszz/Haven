@@ -26,7 +26,8 @@ def database_url():
 
 @pytest.fixture(scope="session")
 def app(database_url):
-    return create_app({"DATABASE_URL": database_url, "JWT_SECRET": "test-secret-" + "x" * 32})
+    # No GEMINI_API_KEY: assistant tests install a fake model instead of calling Gemini.
+    return create_app({"DATABASE_URL": database_url, "JWT_SECRET": "test-secret-" + "x" * 32, "GEMINI_API_KEY": None})
 
 
 @pytest.fixture(autouse=True)

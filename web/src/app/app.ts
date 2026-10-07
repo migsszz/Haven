@@ -3,10 +3,11 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AuthService } from './core/auth.service';
 import { CartService } from './core/cart.service';
+import { Assistant } from './shared/assistant';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Assistant],
   template: `
     <div class="flex min-h-screen flex-col">
       <header class="sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur">
@@ -51,6 +52,7 @@ import { CartService } from './core/cart.service';
         Haven is a demo store. Payments are simulated and no real orders are shipped.
       </footer>
     </div>
+    <app-assistant />
   `,
 })
 export class App {

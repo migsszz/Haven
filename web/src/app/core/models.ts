@@ -61,6 +61,16 @@ export interface StockProblem {
   available?: number;
 }
 
+export type AssistantAction =
+  | { type: 'add_to_cart'; product: Product; quantity: number }
+  | { type: 'confirm_cancel_order'; orderId: number };
+
+export interface AssistantReply {
+  reply: string;
+  products: Product[];
+  actions: AssistantAction[];
+}
+
 /** Body of every error response from the API. */
 export interface ApiErrorBody {
   error: string;
