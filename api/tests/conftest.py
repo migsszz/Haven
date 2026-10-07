@@ -25,9 +25,16 @@ def database_url():
 
 
 @pytest.fixture(scope="session")
-def app(database_url):
+def app(database_url, tmp_path_factory):
     # No OPENAI_API_KEY: assistant tests install a fake model instead of calling OpenAI.
-    return create_app({"DATABASE_URL": database_url, "JWT_SECRET": "test-secret-" + "x" * 32, "OPENAI_API_KEY": None})
+    return create_app(
+        {
+            "DATABASE_URL": database_url,
+            "JWT_SECRET": "test-secret-" + "x" * 32,
+            "OPENAI_API_KEY": None,
+            "UPLOAD_DIR": str(tmp_path_factory.mktemp("uploads")),
+        }
+    )
 
 
 @pytest.fixture(autouse=True)

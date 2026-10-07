@@ -1,10 +1,11 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, send_from_directory
 from psycopg.errors import ForeignKeyViolation, UniqueViolation
 from pydantic import BaseModel, Field
 
 from . import db
 from .auth import require_admin
 from .errors import ApiError
+from .uploads import MAX_UPLOAD_BYTES, NAME_PATTERN, encode_image, remove_upload, save_image, upload_dir
 
 bp = Blueprint("products", __name__)
 
@@ -231,7 +232,11 @@ def admin_update_product(product_id: int):
     if not changes:
         raise ApiError(400, "Nothing to update")
 
+    old_image = None
     with db.connection() as conn:
+        if "image_url" in changes:
+            previous = conn.execute("SELECT image_url FROM products WHERE id = %s FOR UPDATE", (product_id,)).fetchone()
+            old_image = previous["image_url"] if previous else None
         if "category_slug" in changes:
             changes["category_id"] = _category_id(conn, changes.pop("category_slug"))
         # Keys come from the pydantic model's field names, never from the client.
@@ -246,4 +251,57 @@ def admin_update_product(product_id: int):
         if not updated:
             raise ApiError(404, "Product not found")
         row = fetch_product(conn, "p.id = %s", product_id)
+    # Replacing or clearing the image URL orphans an uploaded file; clean it up once the change is saved.
+    if old_image and old_image != changes.get("image_url"):
+        remove_upload(old_image)
     return serialize_product(row)
+
+
+@bp.post("/admin/products/<int:product_id>/image")
+@require_admin
+def admin_upload_image(product_id: int):
+    upload = request.files.get("file")
+    if upload is None:
+        raise ApiError(400, "Choose an image file to upload")
+    data = upload.read(MAX_UPLOAD_BYTES + 1)
+    if len(data) > MAX_UPLOAD_BYTES:
+        raise ApiError(413, f"Images can be at most {MAX_UPLOAD_BYTES // (1024 * 1024)} MB")
+
+    url = save_image(encode_image(data))
+    try:
+        with db.connection() as conn:
+            previous = conn.execute("SELECT image_url FROM products WHERE id = %s FOR UPDATE", (product_id,)).fetchone()
+            if not previous:
+                raise ApiError(404, "Product not found")
+            conn.execute("UPDATE products SET image_url = %s, updated_at = now() WHERE id = %s", (url, product_id))
+            row = fetch_product(conn, "p.id = %s", product_id)
+    except BaseException:
+        remove_upload(url)  # don't leave a file nothing points to
+        raise
+    remove_upload(previous["image_url"])
+    return serialize_product(row)
+
+
+@bp.delete("/admin/products/<int:product_id>/image")
+@require_admin
+def admin_remove_image(product_id: int):
+    with db.connection() as conn:
+        previous = conn.execute("SELECT image_url FROM products WHERE id = %s FOR UPDATE", (product_id,)).fetchone()
+        if not previous:
+            raise ApiError(404, "Product not found")
+        conn.execute("UPDATE products SET image_url = NULL, updated_at = now() WHERE id = %s", (product_id,))
+        row = fetch_product(conn, "p.id = %s", product_id)
+    remove_upload(previous["image_url"])
+    return serialize_product(row)
+
+
+@bp.get("/uploads/<name>")
+def serve_upload(name: str):
+    """In production nginx serves these straight from the shared volume; this covers local development."""
+    if not NAME_PATTERN.fullmatch(name):
+        raise ApiError(404, "Not found")
+    response = send_from_directory(upload_dir(), name, mimetype="image/webp")
+    # The name is random and never reused, so the file behind it never changes.
+    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response

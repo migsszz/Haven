@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import click
 from flask import Flask, jsonify
@@ -18,6 +19,10 @@ def create_app(config: dict | None = None) -> Flask:
         JWT_SECRET=os.environ.get("JWT_SECRET"),
         JWT_TTL_HOURS=int(os.environ.get("JWT_TTL_HOURS", "8")),
         # Optional: without a key the assistant endpoints report it as disabled.
+        # Where product photos are stored. In Docker this is a volume shared with nginx.
+        UPLOAD_DIR=os.environ.get("UPLOAD_DIR", str(Path(__file__).resolve().parent.parent / "uploads")),
+        # Reject oversized request bodies before they're read; the photo limit itself is 5 MB.
+        MAX_CONTENT_LENGTH=6 * 1024 * 1024,
         OPENAI_API_KEY=os.environ.get("OPENAI_API_KEY"),
         OPENAI_MODEL=os.environ.get("OPENAI_MODEL", "gpt-6-luna"),
     )

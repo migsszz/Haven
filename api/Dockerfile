@@ -11,7 +11,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY wsgi.py .
 
-RUN useradd --create-home --uid 10001 appuser
+# Product photos live here. docker-compose mounts a volume over it (shared read-only with nginx).
+ENV UPLOAD_DIR=/data/uploads
+RUN useradd --create-home --uid 10001 appuser && mkdir -p /data/uploads && chown appuser /data/uploads
 USER appuser
 
 EXPOSE 8000

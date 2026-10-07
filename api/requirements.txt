@@ -5,3 +5,4 @@ pydantic[email]==2.*
 pyjwt==2.*
 gunicorn==23.*
 openai==3.*
+pillow==12.*
