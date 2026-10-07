@@ -18,8 +18,8 @@ def create_app(config: dict | None = None) -> Flask:
         JWT_SECRET=os.environ.get("JWT_SECRET"),
         JWT_TTL_HOURS=int(os.environ.get("JWT_TTL_HOURS", "8")),
         # Optional: without a key the assistant endpoints report it as disabled.
-        GEMINI_API_KEY=os.environ.get("GEMINI_API_KEY"),
-        GEMINI_MODEL=os.environ.get("GEMINI_MODEL", "gemini-flash-latest"),
+        OPENAI_API_KEY=os.environ.get("OPENAI_API_KEY"),
+        OPENAI_MODEL=os.environ.get("OPENAI_MODEL", "gpt-6-luna"),
     )
     if config:
         app.config.update(config)

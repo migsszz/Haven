@@ -73,6 +73,15 @@ def fetch_product(conn, where: str, value) -> dict | None:
     ).fetchone()
 
 
+def fetch_products(conn, ids: list[int]) -> dict[int, dict]:
+    """Products by id, active or not, keyed by id. Missing ids are simply absent."""
+    rows = conn.execute(
+        f"SELECT {PRODUCT_COLUMNS} FROM products p JOIN categories c ON c.id = p.category_id WHERE p.id = ANY(%s)",
+        (ids,),
+    ).fetchall()
+    return {r["id"]: r for r in rows}
+
+
 @bp.get("/categories")
 def list_categories():
     with db.connection() as conn:
@@ -95,6 +104,8 @@ def search_products(
     page: int = 1,
     page_size: int = 12,
     max_price_cents: int | None = None,
+    min_price_cents: int | None = None,
+    in_stock_only: bool = False,
     include_inactive: bool = False,
 ) -> dict:
     """Shared by the catalog endpoints and the assistant's search tool."""
@@ -115,6 +126,11 @@ def search_products(
     if max_price_cents is not None:
         conditions.append("p.price_cents <= %s")
         params.append(max_price_cents)
+    if min_price_cents is not None:
+        conditions.append("p.price_cents >= %s")
+        params.append(min_price_cents)
+    if in_stock_only:
+        conditions.append("p.stock > 0")
     where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
 
     with db.connection() as conn:

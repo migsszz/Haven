@@ -14,8 +14,8 @@ Payments are simulated. It's a demo store, so no card details are collected.
 - Order history, with self-service cancellation until an order ships.
 
 **Shopping assistant (AI agent)**
-- A chat panel ("Ask Haven") that finds products from a plain-language request, compares them, adds them to the cart, and checks on or offers to cancel the shopper's orders.
-- Built on Gemini with tool calling. Optional: without `GEMINI_API_KEY` the panel stays hidden.
+- A chat panel ("Ask Haven") that finds products from a plain-language request, compares them, reads and edits the cart, and checks on or offers to cancel the shopper's orders.
+- Built on OpenAI (`gpt-6-luna` by default) with tool calling. Optional: without `OPENAI_API_KEY` the panel stays hidden.
 
 **Admins**
 - Create, edit, reprice, restock, and hide products.
@@ -39,7 +39,7 @@ The browser only talks to one origin: nginx serves the Angular build and forward
 | --- | --- |
 | Frontend | Angular 21 (standalone components, signals, `httpResource`), Tailwind CSS 4, DaisyUI 5, Vitest |
 | Backend | Flask 3, psycopg 3 with a connection pool, Pydantic validation, JWT auth, gunicorn, pytest |
-| AI | Google Gemini (`google-genai`) with function calling |
+| AI | OpenAI (`openai`, Chat Completions) with function calling |
 | Database | PostgreSQL 17, plain SQL schema |
 | Delivery | Docker, docker compose, GitHub Actions, Amazon ECR, EC2 |
 
@@ -55,13 +55,14 @@ The browser only talks to one origin: nginx serves the Angular build and forward
 
 ### The assistant
 
-[api/app/assistant/](api/app/assistant/) runs a tool-calling loop: send the shopper's message to the model, run whatever tools it asks for, send back the results, and repeat until it answers (at most 6 rounds).
+[api/app/assistant/](api/app/assistant/) runs a tool-calling loop: send the shopper's message to the model, run whatever tools it asks for, send back the results, and repeat until it answers (at most 6 rounds). Model calls time out after 60 seconds, and gunicorn and nginx allow 120 for the whole request.
 
 - **Tools run as the shopper.** Each tool reuses the same queries as the regular endpoints, with the caller's identity from their JWT, so the assistant can't see another customer's orders or anything a guest couldn't. Guests can search. Order tools ask them to sign in.
 - **The model never changes anything by itself.** "Add to cart" comes back to the browser as an action, since the cart lives there. Cancelling only proposes: the shopper gets a confirm button that calls the normal cancel endpoint.
+- **The cart is sent with each message.** It lives in the browser, so the browser includes it and the `get_cart` tool prices it from the database and flags lines that checkout would reject (sold out, or more than is in stock). `add_to_cart` counts what's already in the cart against stock, and cart edits go back to the browser as the new quantity, so applying one twice is harmless.
 - **Product text is treated as data.** Admins can edit descriptions, so the system prompt says tool results never contain instructions. Tools return only the fields the model needs.
 - **Failures stay contained.** A tool that errors returns the error to the model rather than failing the request. A model outage is a clean `502`. Requests are rate-limited per user or IP.
-- **Provider-agnostic loop.** The loop only knows `ModelTurn` and `ToolCall` ([llm.py](api/app/assistant/llm.py)). Gemini sits behind a small adapter, and the tests drive the loop with a scripted fake model, so they run offline.
+- **Provider-agnostic loop.** The loop only knows `ModelTurn` and `ToolCall` ([llm.py](api/app/assistant/llm.py)). OpenAI sits behind a small adapter, and the tests drive the loop with a scripted fake model, so they run offline.
 
 ## Project layout
 
@@ -128,7 +129,7 @@ CI runs the tests on every push and pull request. On pushes to `main`, once the 
 One-time setup:
 
 1. **ECR:** create two repositories, `haven-api` and `haven-web`.
-2. **EC2:** launch a small Amazon Linux instance (t3.small is plenty) and install Docker with the compose plugin. Open port 80 (or `HTTP_PORT`) in its security group. Attach an instance role with `AmazonEC2ContainerRegistryReadOnly`. In `~/haven/.env` on the instance, set `JWT_SECRET`, `POSTGRES_PASSWORD`, `HTTP_PORT=80`, and optionally `GEMINI_API_KEY`.
+2. **EC2:** launch a small Amazon Linux instance (t3.small is plenty) and install Docker with the compose plugin. Open port 80 (or `HTTP_PORT`) in its security group. Attach an instance role with `AmazonEC2ContainerRegistryReadOnly`. In `~/haven/.env` on the instance, set `JWT_SECRET`, `POSTGRES_PASSWORD`, `HTTP_PORT=80`, and optionally `OPENAI_API_KEY`.
 3. **GitHub → AWS auth:** add GitHub as an OIDC identity provider in IAM, and create a role that GitHub Actions can assume for this repository, with permission to push to the two ECR repositories.
 4. **GitHub settings:** add the variable `AWS_REGION`, and the secrets `AWS_DEPLOY_ROLE_ARN`, `EC2_HOST`, `EC2_USER`, and `EC2_SSH_KEY`.
 5. Push to `main`. After the first deploy, create an admin with `docker compose exec api flask --app wsgi create-admin …` on the instance.

@@ -29,8 +29,8 @@ services:
     environment:
       DATABASE_URL: postgresql://haven:${POSTGRES_PASSWORD:-haven}@db:5432/haven
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env (at least 32 characters)}
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-flash-latest}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-luna}
     depends_on:
       db:
         condition: service_healthy

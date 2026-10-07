@@ -63,6 +63,7 @@ export interface StockProblem {
 
 export type AssistantAction =
   | { type: 'add_to_cart'; product: Product; quantity: number }
+  | { type: 'set_cart_quantity'; productId: number; name: string; quantity: number }
   | { type: 'confirm_cancel_order'; orderId: number };
 
 export interface AssistantReply {

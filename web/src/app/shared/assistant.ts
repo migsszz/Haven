@@ -20,7 +20,7 @@ interface ChatMessage {
 }
 
 const HISTORY_LIMIT = 20;
-const SUGGESTIONS = ['Gift ideas under $40', 'What do you have for working from home?', "Where's my latest order?"];
+const SUGGESTIONS = ['Gift ideas under $40', "What's in my cart?", "Where's my latest order?"];
 
 @Component({
   selector: 'app-assistant',
@@ -69,6 +69,14 @@ const SUGGESTIONS = ['Gift ideas under $40', 'What do you have for working from 
                   @case ('add_to_cart') {
                     <div class="ml-2 flex items-center gap-2 rounded-lg bg-success/10 p-2 text-sm">
                       <span class="flex-1">Added {{ a.quantity }} &times; {{ a.product.name }} to your cart</span>
+                      <a routerLink="/cart" class="btn btn-ghost btn-xs">View cart</a>
+                    </div>
+                  }
+                  @case ('set_cart_quantity') {
+                    <div class="ml-2 flex items-center gap-2 rounded-lg bg-success/10 p-2 text-sm">
+                      <span class="flex-1">
+                        {{ a.quantity === 0 ? 'Removed ' + a.name + ' from your cart' : 'Now ' + a.quantity + ' × ' + a.name + ' in your cart' }}
+                      </span>
                       <a routerLink="/cart" class="btn btn-ghost btn-xs">View cart</a>
                     </div>
                   }
@@ -175,9 +183,14 @@ export class Assistant {
     this.sending.set(true);
 
     try {
-      const res = await firstValueFrom(this.http.post<AssistantReply>('/api/assistant/chat', { message, history }));
+      // The cart lives in the browser, so the assistant only knows it because we send it.
+      const cart = this.cart.lines().map((l) => ({ productId: l.productId, quantity: l.quantity }));
+      const res = await firstValueFrom(
+        this.http.post<AssistantReply>('/api/assistant/chat', { message, history, cart }),
+      );
       for (const action of res.actions) {
         if (action.type === 'add_to_cart') this.cart.add(action.product, action.quantity);
+        else if (action.type === 'set_cart_quantity') this.cart.setQuantity(action.productId, action.quantity);
       }
       this.messages.update((list) => [
         ...list,
