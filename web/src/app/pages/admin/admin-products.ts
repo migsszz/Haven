@@ -1,16 +1,19 @@
 import { httpResource } from '@angular/common/http';
-import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { ApiService, apiErrorMessage, ProductInput } from '../../core/api.service';
 import { Category, Page, Product } from '../../core/models';
 import { MoneyPipe } from '../../shared/money.pipe';
+import { ProductImage } from '../../shared/product-image';
 
 const PAGE_SIZE = 48;
+const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 @Component({
   selector: 'app-admin-products',
-  imports: [ReactiveFormsModule, MoneyPipe],
+  imports: [ReactiveFormsModule, MoneyPipe, ProductImage],
   template: `
     <div class="mb-3 flex flex-wrap items-center gap-2">
       <label class="input input-sm w-full sm:max-w-xs">
@@ -42,8 +45,18 @@ const PAGE_SIZE = 48;
             @for (p of result.items; track p.id) {
               <tr [class.opacity-50]="!p.isActive">
                 <td>
-                  <div class="font-medium">{{ p.name }}</div>
-                  <div class="text-xs text-base-content/50">{{ p.slug }}</div>
+                  <div class="flex items-center gap-3">
+                    <app-product-image
+                      class="size-10 shrink-0 rounded-md"
+                      [name]="p.name"
+                      [category]="p.category.slug"
+                      [src]="p.imageUrl"
+                    />
+                    <div>
+                      <div class="font-medium">{{ p.name }}</div>
+                      <div class="text-xs text-base-content/50">{{ p.slug }}</div>
+                    </div>
+                  </div>
                 </td>
                 <td>{{ p.category.name }}</td>
                 <td class="text-right">{{ p.priceCents | money }}</td>
@@ -98,7 +111,32 @@ const PAGE_SIZE = 48;
           <label class="label mt-1" for="p-description">Description</label>
           <textarea id="p-description" class="textarea w-full" rows="3" formControlName="description"></textarea>
 
-          <label class="label mt-1" for="p-image">Image URL (optional)</label>
+          <label class="label mt-1" for="p-photo">Photo</label>
+          <div class="flex items-center gap-3">
+            <app-product-image
+              class="size-20 shrink-0 rounded-lg"
+              [name]="form.controls.name.value || 'New product'"
+              [category]="form.controls.categorySlug.value"
+              [src]="photoPreview() ?? (form.controls.imageUrl.value || null)"
+            />
+            <div class="min-w-0 flex-1 space-y-1">
+              <input
+                id="p-photo"
+                type="file"
+                class="file-input file-input-sm w-full"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="onPhotoChosen($event)"
+              />
+              @if (form.controls.imageUrl.value && !photoPreview()) {
+                <button type="button" class="btn btn-ghost btn-xs" [disabled]="saving()" (click)="removePhoto()">
+                  Remove photo
+                </button>
+              }
+              <p class="text-xs text-base-content/60">JPEG, PNG, or WebP, up to 5 MB. Large photos are resized.</p>
+            </div>
+          </div>
+
+          <label class="label mt-1" for="p-image">Or an image URL</label>
           <input id="p-image" class="input w-full" formControlName="imageUrl" placeholder="https://" />
 
           <label class="label mt-2 cursor-pointer gap-2">
@@ -120,7 +158,7 @@ const PAGE_SIZE = 48;
     </dialog>
   `,
 })
-export class AdminProducts {
+export class AdminProducts implements OnDestroy {
   private readonly api = inject(ApiService);
 
   protected readonly editorRef = viewChild.required<ElementRef<HTMLDialogElement>>('editor');
@@ -129,6 +167,9 @@ export class AdminProducts {
   protected readonly saving = signal(false);
   protected readonly error = signal<string | null>(null);
   private readonly search = signal('');
+  /** A photo picked in the form but not uploaded yet, and a local preview of it. */
+  private pendingPhoto: File | null = null;
+  protected readonly photoPreview = signal<string | null>(null);
 
   protected readonly categories = httpResource<Category[]>(() => '/api/categories');
   protected readonly products = httpResource<Page<Product>>(() => ({
@@ -154,7 +195,63 @@ export class AdminProducts {
     this.searchTimer = setTimeout(() => this.search.set(value.trim()), 300);
   }
 
+  ngOnDestroy(): void {
+    this.clearPhoto();
+  }
+
+  protected onPhotoChosen(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.clearPhoto();
+    if (!file) return;
+    if (!PHOTO_TYPES.includes(file.type)) {
+      input.value = '';
+      this.error.set('Choose a JPEG, PNG, or WebP image.');
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      input.value = '';
+      this.error.set('That photo is over 5 MB. Choose a smaller one.');
+      return;
+    }
+    this.error.set(null);
+    this.pendingPhoto = file;
+    this.photoPreview.set(URL.createObjectURL(file));
+  }
+
+  private clearPhoto(): void {
+    const preview = this.photoPreview();
+    if (preview) URL.revokeObjectURL(preview);
+    this.photoPreview.set(null);
+    this.pendingPhoto = null;
+  }
+
+  protected async removePhoto(): Promise<void> {
+    const editing = this.editing();
+    if (!editing) {
+      this.form.controls.imageUrl.setValue('');
+      return;
+    }
+    this.saving.set(true);
+    this.error.set(null);
+    try {
+      this.applySaved(await this.api.removeProductImage(editing.id));
+      this.products.reload();
+    } catch (err) {
+      this.error.set(apiErrorMessage(err));
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  /** Keeps the open form in step with what the server now has, so the next Save doesn't undo it. */
+  private applySaved(product: Product): void {
+    this.editing.set(product);
+    this.form.controls.imageUrl.setValue(product.imageUrl ?? '');
+  }
+
   protected openEditor(product: Product | null): void {
+    this.clearPhoto();
     this.error.set(null);
     this.editing.set(product);
     this.form.reset({
@@ -193,14 +290,26 @@ export class AdminProducts {
     this.saving.set(true);
     this.error.set(null);
     try {
+      let saved: Product;
       if (editing) {
         const { slug: _slug, ...changes } = input;
-        await this.api.updateProduct(editing.id, changes);
+        saved = await this.api.updateProduct(editing.id, changes);
       } else {
-        await this.api.createProduct(input);
+        saved = await this.api.createProduct(input);
+      }
+      this.applySaved(saved); // from here on this is an existing product, so a retry updates it
+      this.products.reload();
+
+      if (this.pendingPhoto) {
+        try {
+          this.applySaved(await this.api.uploadProductImage(saved.id, this.pendingPhoto));
+          this.products.reload();
+        } catch (err) {
+          this.error.set(`The product was saved, but the photo wasn't uploaded: ${apiErrorMessage(err)}`);
+          return;
+        }
       }
       this.editorRef().nativeElement.close();
-      this.products.reload();
     } catch (err) {
       this.error.set(apiErrorMessage(err));
     } finally {

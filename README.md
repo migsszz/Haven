@@ -18,7 +18,7 @@ Payments are simulated. It's a demo store, so no card details are collected.
 - Built on OpenAI (`gpt-6-luna` by default) with tool calling. Optional: without `OPENAI_API_KEY` the panel stays hidden.
 
 **Admins**
-- Create, edit, reprice, restock, and hide products.
+- Create, edit, reprice, restock, and hide products, with photo upload (JPEG, PNG, or WebP up to 5 MB).
 - Move orders through `placed → shipped → delivered`, or cancel them (which puts the stock back).
 
 ## Architecture
@@ -51,6 +51,7 @@ The browser only talks to one origin: nginx serves the Angular build and forward
 - **Integer cents everywhere.** No floating-point money.
 - **Constraints in the database, not just the code.** `CHECK (stock >= 0)`, `CHECK (quantity > 0)`, and an enum for order status back up the application checks.
 - **Order status is a small state machine.** Allowed transitions are listed in one place (`TRANSITIONS` in [api/app/orders.py](api/app/orders.py)), and invalid moves return `409`.
+- **Photos are re-encoded, not stored as sent.** An upload is decoded, rotated upright, shrunk to 1600 px, and saved as WebP under a random name ([api/app/uploads.py](api/app/uploads.py)). That means the type is what the bytes really are (no SVG or script renamed to `.png`), camera metadata such as GPS is dropped, and a new photo gets a new URL, so the old ones can be cached forever. Files live on a Docker volume that nginx serves directly. Only admins can upload, and deleting only ever touches files the app created.
 - **Safe dynamic SQL.** Sort keys are whitelisted, and every value is a bound parameter.
 
 ### The assistant
@@ -136,5 +137,7 @@ One-time setup:
 
 > [!NOTE]
 > Set an AWS billing alert. A single small EC2 instance costs a few dollars a month. Stop it when you're not using it.
+
+Photos are stored on the `uploads` Docker volume, next to the database volume, so back both up (or move to S3) before relying on them.
 
 Possible next steps: RDS instead of the Postgres container, S3 + CloudFront for product images, HTTPS with a load balancer or Caddy, and ECS Fargate instead of a single instance.

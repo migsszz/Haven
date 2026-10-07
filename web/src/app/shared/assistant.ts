@@ -9,6 +9,7 @@ import { AuthService } from '../core/auth.service';
 import { CartService } from '../core/cart.service';
 import { AssistantAction, AssistantReply, Product } from '../core/models';
 import { MoneyPipe } from './money.pipe';
+import { ProductImage } from './product-image';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -24,7 +25,7 @@ const SUGGESTIONS = ['Gift ideas under $40', "What's in my cart?", "Where's my l
 
 @Component({
   selector: 'app-assistant',
-  imports: [FormsModule, RouterLink, MoneyPipe],
+  imports: [FormsModule, RouterLink, MoneyPipe, ProductImage],
   template: `
     @if (status.value()?.enabled) {
       @if (open()) {
@@ -52,6 +53,12 @@ const SUGGESTIONS = ['Gift ideas under $40', "What's in my cart?", "Where's my l
 
               @for (p of m.products ?? []; track p.id) {
                 <div class="ml-2 flex items-center gap-2 rounded-lg border border-base-300 p-2 text-sm">
+                  <app-product-image
+                    class="size-10 shrink-0 rounded-md"
+                    [name]="p.name"
+                    [category]="p.category.slug"
+                    [src]="p.imageUrl"
+                  />
                   <a [routerLink]="['/products', p.slug]" class="min-w-0 flex-1 truncate hover:underline">{{ p.name }}</a>
                   <span class="font-semibold">{{ p.priceCents | money }}</span>
                   <button

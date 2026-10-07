@@ -42,6 +42,16 @@ export class ApiService {
     return firstValueFrom(this.http.patch<Product>(`/api/admin/products/${id}`, changes));
   }
 
+  uploadProductImage(id: number, file: File): Promise<Product> {
+    const body = new FormData();
+    body.append('file', file);
+    return firstValueFrom(this.http.post<Product>(`/api/admin/products/${id}/image`, body));
+  }
+
+  removeProductImage(id: number): Promise<Product> {
+    return firstValueFrom(this.http.delete<Product>(`/api/admin/products/${id}/image`));
+  }
+
   updateOrderStatus(id: number, status: OrderStatus): Promise<Order> {
     return firstValueFrom(this.http.patch<Order>(`/api/admin/orders/${id}`, { status }));
   }
