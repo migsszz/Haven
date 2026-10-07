@@ -4,6 +4,7 @@ The loop in agent.py only sees ModelTurn/ToolCall, so the provider can be swappe
 (or faked in tests) without touching it.
 """
 
+import json
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -43,78 +44,69 @@ class LLM(Protocol):
     def start_chat(self, system: str, tools: list[dict], history: list[Message]) -> ChatSession: ...
 
 
-class GeminiLLM:
+class OpenAILLM:
     def __init__(self, api_key: str, model: str):
-        from google import genai
+        from openai import OpenAI
 
-        self.client = genai.Client(api_key=api_key)
+        # A turn can make several calls, so a stuck one must fail rather than hold a worker.
+        self.client = OpenAI(api_key=api_key, timeout=60.0, max_retries=2)
         self.model = model
 
     def start_chat(self, system: str, tools: list[dict], history: list[Message]) -> ChatSession:
-        return GeminiChat(self.client, self.model, system, tools, history)
+        return OpenAIChat(self.client, self.model, system, tools, history)
 
 
-class GeminiChat:
+class OpenAIChat:
+    """One conversation over the Chat Completions API. The tools are run by us, never by the SDK."""
+
     def __init__(self, client, model: str, system: str, tools: list[dict], history: list[Message]):
-        from google.genai import types
-
-        self.types = types
         self.client = client
         self.model = model
-        self.config = types.GenerateContentConfig(
-            system_instruction=system,
-            tools=[
-                types.Tool(
-                    function_declarations=[
-                        types.FunctionDeclaration(
-                            name=t["name"],
-                            description=t["description"],
-                            parameters_json_schema=t["parameters"],
-                        )
-                        for t in tools
-                    ]
-                )
-            ],
-            # We run the tools ourselves, so each one goes through our own permission checks.
-            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
-            temperature=0.3,
-        )
-        self.contents = [
-            types.Content(
-                role="user" if m.role == "user" else "model",
-                parts=[types.Part.from_text(text=m.text)],
-            )
-            for m in history
+        self.tools = [
+            {
+                "type": "function",
+                "function": {"name": t["name"], "description": t["description"], "parameters": t["parameters"]},
+            }
+            for t in tools
         ]
+        self.messages: list[dict[str, Any]] = [{"role": "system", "content": system}]
+        self.messages += [{"role": m.role, "content": m.text} for m in history]
 
     def send_message(self, text: str) -> ModelTurn:
-        self.contents.append(self.types.Content(role="user", parts=[self.types.Part.from_text(text=text)]))
+        self.messages.append({"role": "user", "content": text})
         return self._generate()
 
     def send_tool_results(self, results: list[ToolResult]) -> ModelTurn:
-        parts = [
-            self.types.Part(
-                function_response=self.types.FunctionResponse(
-                    id=r.call.id, name=r.call.name, response={"result": r.output}
-                )
-            )
-            for r in results
-        ]
-        self.contents.append(self.types.Content(role="user", parts=parts))
+        # One "tool" message per call, in the order the model asked for them.
+        for r in results:
+            self.messages.append({"role": "tool", "tool_call_id": r.call.id, "content": json.dumps(r.output)})
         return self._generate()
 
     def _generate(self) -> ModelTurn:
-        response = self.client.models.generate_content(model=self.model, contents=self.contents, config=self.config)
-        content = response.candidates[0].content if response.candidates else None
-        if content is None or not content.parts:
+        response = self.client.chat.completions.create(model=self.model, messages=self.messages, tools=self.tools)
+        if not response.choices:
             return ModelTurn()
-        # Keep the model's turn exactly as returned: it can carry thought signatures
-        # that Gemini expects back on the next call.
-        self.contents.append(content)
-        calls = [
-            ToolCall(name=p.function_call.name, args=dict(p.function_call.args or {}), id=p.function_call.id)
-            for p in content.parts
-            if p.function_call
-        ]
-        text = "".join(p.text for p in content.parts if p.text and not p.thought)
+        message = response.choices[0].message
+        tool_calls = message.tool_calls or []
+
+        # Keep the model's turn in the history; a tool result must follow the call it answers.
+        entry: dict[str, Any] = {"role": "assistant", "content": message.content}
+        if tool_calls:
+            entry["tool_calls"] = [
+                {"id": c.id, "type": "function", "function": {"name": c.function.name, "arguments": c.function.arguments}}
+                for c in tool_calls
+            ]
+        self.messages.append(entry)
+
+        calls = [ToolCall(name=c.function.name, args=_parse_args(c.function.arguments), id=c.id) for c in tool_calls]
+        text = message.content or getattr(message, "refusal", None) or ""
         return ModelTurn(text=text.strip(), calls=calls)
+
+
+def _parse_args(raw: str | None) -> dict[str, Any]:
+    """Tool arguments arrive as a JSON string. Anything unusable becomes {}, which the tool reports as missing input."""
+    try:
+        args = json.loads(raw or "{}")
+    except json.JSONDecodeError:
+        return {}
+    return args if isinstance(args, dict) else {}

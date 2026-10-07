@@ -10,6 +10,7 @@ from ..auth import optional_auth
 from ..errors import ApiError
 from .agent import run_agent
 from .llm import LLM, Message
+from .tools import MAX_CART_QUANTITY
 
 log = logging.getLogger(__name__)
 
@@ -24,9 +25,16 @@ class HistoryItem(BaseModel):
     text: str = Field(max_length=4000)
 
 
+class CartLineIn(BaseModel):
+    product_id: int = Field(alias="productId", gt=0)
+    quantity: int = Field(gt=0, le=MAX_CART_QUANTITY)
+
+
 class ChatIn(BaseModel):
     message: str = Field(min_length=1, max_length=1000)
     history: list[HistoryItem] = Field(default_factory=list, max_length=20)
+    # The cart lives in the browser, so the assistant only knows it if we're told.
+    cart: list[CartLineIn] = Field(default_factory=list, max_length=50)
 
 
 class RateLimiter:
@@ -53,11 +61,11 @@ class RateLimiter:
 
 def init_app(app) -> None:
     app.extensions["assistant_limiter"] = RateLimiter(RATE_LIMIT, RATE_WINDOW_SECONDS)
-    api_key = app.config.get("GEMINI_API_KEY")
+    api_key = app.config.get("OPENAI_API_KEY")
     if api_key and "assistant_llm" not in app.extensions:
-        from .llm import GeminiLLM
+        from .llm import OpenAILLM
 
-        app.extensions["assistant_llm"] = GeminiLLM(api_key, app.config["GEMINI_MODEL"])
+        app.extensions["assistant_llm"] = OpenAILLM(api_key, app.config["OPENAI_MODEL"])
 
 
 def _llm() -> LLM | None:
@@ -82,8 +90,11 @@ def chat():
         raise ApiError(429, "You're sending messages quickly. Please wait a few minutes and try again.")
 
     history = [Message(role=h.role, text=h.text) for h in body.history]
+    cart: dict[int, int] = {}
+    for line in body.cart:
+        cart[line.product_id] = min(cart.get(line.product_id, 0) + line.quantity, MAX_CART_QUANTITY)
     try:
-        result = run_agent(llm, history, body.message.strip(), g.user_id)
+        result = run_agent(llm, history, body.message.strip(), g.user_id, cart)
     except Exception:
         log.exception("Assistant request failed")
         raise ApiError(502, "The assistant is unavailable right now. Please try again in a moment.")
