@@ -57,50 +57,59 @@ class OpenAILLM:
 
 
 class OpenAIChat:
-    """One conversation over the Chat Completions API. The tools are run by us, never by the SDK."""
+    """One conversation over the Responses API. The tools are run by us, never by the SDK.
+
+    Chat Completions can't be used here: reasoning models reject function tools on it unless
+    reasoning is switched off. The Responses API allows both. The reasoning the model does between
+    tool calls stays on OpenAI's side and is picked back up through previous_response_id, so we
+    only ever send the new tool results.
+    """
 
     def __init__(self, client, model: str, system: str, tools: list[dict], history: list[Message]):
         self.client = client
         self.model = model
+        self.system = system
         self.tools = [
-            {
-                "type": "function",
-                "function": {"name": t["name"], "description": t["description"], "parameters": t["parameters"]},
-            }
+            # strict=False because our schemas have optional arguments, which strict mode doesn't allow.
+            {"type": "function", "name": t["name"], "description": t["description"], "parameters": t["parameters"], "strict": False}
             for t in tools
         ]
-        self.messages: list[dict[str, Any]] = [{"role": "system", "content": system}]
-        self.messages += [{"role": m.role, "content": m.text} for m in history]
+        self.history: list[dict[str, Any]] = [{"role": m.role, "content": m.text} for m in history]
+        self.previous_response_id: str | None = None
 
     def send_message(self, text: str) -> ModelTurn:
-        self.messages.append({"role": "user", "content": text})
-        return self._generate()
+        return self._generate(self.history + [{"role": "user", "content": text}])
 
     def send_tool_results(self, results: list[ToolResult]) -> ModelTurn:
-        # One "tool" message per call, in the order the model asked for them.
-        for r in results:
-            self.messages.append({"role": "tool", "tool_call_id": r.call.id, "content": json.dumps(r.output)})
-        return self._generate()
+        # One output per call, matched by call_id. The calls themselves are already on OpenAI's side.
+        return self._generate(
+            [{"type": "function_call_output", "call_id": r.call.id, "output": json.dumps(r.output)} for r in results]
+        )
 
-    def _generate(self) -> ModelTurn:
-        response = self.client.chat.completions.create(model=self.model, messages=self.messages, tools=self.tools)
-        if not response.choices:
-            return ModelTurn()
-        message = response.choices[0].message
-        tool_calls = message.tool_calls or []
+    def _generate(self, items: list[dict[str, Any]]) -> ModelTurn:
+        params: dict[str, Any] = {
+            "model": self.model,
+            # instructions and tools are not carried over by previous_response_id, so they go on every call.
+            "instructions": self.system,
+            "input": items,
+            "tools": self.tools,
+        }
+        if self.previous_response_id:
+            params["previous_response_id"] = self.previous_response_id
+        response = self.client.responses.create(**params)
+        self.previous_response_id = response.id
 
-        # Keep the model's turn in the history; a tool result must follow the call it answers.
-        entry: dict[str, Any] = {"role": "assistant", "content": message.content}
-        if tool_calls:
-            entry["tool_calls"] = [
-                {"id": c.id, "type": "function", "function": {"name": c.function.name, "arguments": c.function.arguments}}
-                for c in tool_calls
-            ]
-        self.messages.append(entry)
-
-        calls = [ToolCall(name=c.function.name, args=_parse_args(c.function.arguments), id=c.id) for c in tool_calls]
-        text = message.content or getattr(message, "refusal", None) or ""
-        return ModelTurn(text=text.strip(), calls=calls)
+        calls, text = [], []
+        for item in response.output or []:
+            if item.type == "function_call":
+                calls.append(ToolCall(name=item.name, args=_parse_args(item.arguments), id=item.call_id))
+            elif item.type == "message":
+                for part in item.content:
+                    if part.type == "output_text":
+                        text.append(part.text)
+                    elif part.type == "refusal":
+                        text.append(part.refusal)
+        return ModelTurn(text="".join(text).strip(), calls=calls)
 
 
 def _parse_args(raw: str | None) -> dict[str, Any]:
