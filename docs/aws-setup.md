@@ -24,6 +24,8 @@ GitHub Actions ── runs tests ──► builds Docker images ──► Amazon
 
 The deploy job in `.github/workflows/ci.yml` is **skipped until you create the `AWS_REGION` variable** (step 7), so you can do all of this without affecting anything until the last step.
 
+> **Placeholders:** words in CAPITALS such as `YOUR_ELASTIC_IP`, `ACCOUNT_ID`, and `REGION` stand for your own values. Replace the whole word and never type angle brackets (`< >`) or leave them in. For example, `ec2-user@YOUR_ELASTIC_IP` becomes `ec2-user@3.24.69.63`.
+
 ## What you'll need
 
 - An AWS account, and a way to sign in that is **not the root user**. If you only have the root login, create an IAM user or an IAM Identity Center user with administrator access and use that day to day.
@@ -173,7 +175,7 @@ Back in the server's browser terminal, add it (paste your line between the quote
 echo 'ssh-ed25519 AAAA... you@computer' >> ~/.ssh/authorized_keys
 ```
 
-✅ **Checkpoint:** on your computer, `ssh -i haven-deploy ec2-user@<elastic-ip> "echo ok"` prints `ok`. (Type `yes` to the host prompt the first time.)
+✅ **Checkpoint:** on your computer, `ssh -i haven-deploy ec2-user@YOUR_ELASTIC_IP "echo ok"` prints `ok` (for example `ec2-user@3.24.69.63`). (Type `yes` to the host prompt the first time.)
 
 ---
 
@@ -257,7 +259,7 @@ It's a **variable**, not a secret. This is the switch that enables the deploy jo
 
 Now push any commit to `main`, or open **Actions → CI → Re-run all jobs**. The pipeline runs the tests, builds and pushes both images to ECR, copies `docker-compose.yml` and the database scripts to the server, and starts the stack.
 
-✅ **Checkpoint:** the **Build images and deploy to AWS** job turns green, and `http://<elastic-ip>` shows Haven.
+✅ **Checkpoint:** the **Build images and deploy to AWS** job turns green, and `http://YOUR_ELASTIC_IP` shows Haven.
 
 ---
 
