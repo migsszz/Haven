@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 
-export type IconName = 'search' | 'menu' | 'close' | 'sparkle' | 'bag' | 'plus' | 'minus' | 'arrow-left' | 'arrow-right' | 'check' | 'upload';
+export type IconName = 'search' | 'menu' | 'close' | 'sparkle' | 'bag' | 'plus' | 'minus' | 'arrow-left' | 'arrow-right' | 'check' | 'upload' | 'sun' | 'moon' | 'monitor';
 
 /** The handful of line icons the site uses, drawn inline so they follow the text colour and need no requests. */
 @Component({
@@ -27,6 +27,9 @@ export type IconName = 'search' | 'menu' | 'close' | 'sparkle' | 'bag' | 'plus' 
         @case ('arrow-left') { <path d="M19 12H5m6-6-6 6 6 6" /> }
         @case ('arrow-right') { <path d="M5 12h14m-6-6 6 6-6 6" /> }
         @case ('check') { <path d="m5 12.5 4.5 4.5L19 7.5" /> }
+        @case ('sun') { <circle cx="12" cy="12" r="4" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" /> }
+        @case ('moon') { <path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z" /> }
+        @case ('monitor') { <rect x="3.5" y="5" width="17" height="11" rx="1.5" /><path d="M9 20h6M12 16v4" /> }
         @case ('upload') { <path d="M12 16V5m-4.5 4.5L12 5l4.5 4.5M5 19h14" /> }
       }
     </svg>

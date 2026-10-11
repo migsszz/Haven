@@ -7,10 +7,11 @@ import { CartService } from './core/cart.service';
 import { Assistant } from './shared/assistant';
 import { Icon } from './shared/icon';
 import { SearchBox } from './shared/search-box';
+import { ThemeSwitch } from './shared/theme-switch';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Assistant, Icon, SearchBox],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Assistant, Icon, SearchBox, ThemeSwitch],
   template: `
     <a
       href="#main"
@@ -26,20 +27,32 @@ import { SearchBox } from './shared/search-box';
             <!-- Menu (small screens) -->
             <div class="dropdown md:hidden">
               <button tabindex="0" class="btn btn-ghost btn-square -ml-2" aria-label="Menu"><app-icon name="menu" /></button>
-              <ul tabindex="0" class="dropdown-content menu z-40 mt-2 w-60 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
-                <li><a routerLink="/" (click)="closeMenu()">Shop</a></li>
-                @if (auth.user(); as user) {
-                  <li><a routerLink="/orders" (click)="closeMenu()">Your orders</a></li>
-                  @if (auth.isAdmin()) {
-                    <li><a routerLink="/admin" (click)="closeMenu()">Admin</a></li>
+              <div tabindex="0" class="dropdown-content z-40 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
+                <ul class="menu w-full p-0">
+                  <li><a routerLink="/" (click)="closeMenu()">Shop</a></li>
+                  @if (auth.user()) {
+                    <li><a routerLink="/orders" (click)="closeMenu()">Your orders</a></li>
+                    @if (auth.isAdmin()) {
+                      <li><a routerLink="/admin" (click)="closeMenu()">Admin</a></li>
+                    }
+                  } @else {
+                    <li><a routerLink="/login" (click)="closeMenu()">Sign in</a></li>
+                    <li><a routerLink="/register" (click)="closeMenu()">Create an account</a></li>
                   }
-                  <li class="menu-title mt-2 truncate normal-case">{{ user.email }}</li>
-                  <li><button (click)="closeMenu(); auth.logout()">Sign out</button></li>
-                } @else {
-                  <li><a routerLink="/login" (click)="closeMenu()">Sign in</a></li>
-                  <li><a routerLink="/register" (click)="closeMenu()">Create an account</a></li>
+                </ul>
+                <div class="mt-2 border-t border-base-300 px-2 pt-3">
+                  @if (auth.user(); as user) {
+                    <p class="text-sm font-medium">{{ user.name }}</p>
+                    <p class="mb-3 text-xs break-all text-muted">{{ user.email }}</p>
+                  }
+                  <app-theme-switch />
+                </div>
+                @if (auth.user()) {
+                  <ul class="menu mt-2 w-full border-t border-base-300 p-0 pt-2">
+                    <li><button (click)="closeMenu(); auth.logout()">Sign out</button></li>
+                  </ul>
                 }
-              </ul>
+              </div>
             </div>
 
             <a routerLink="/" class="font-display text-2xl tracking-tight" aria-label="Haven, home">Haven</a>
@@ -92,10 +105,14 @@ import { SearchBox } from './shared/search-box';
                     <button tabindex="0" class="btn btn-ghost btn-sm" aria-label="Account menu">
                       <span class="max-w-28 truncate">{{ user.name }}</span>
                     </button>
-                    <ul tabindex="0" class="dropdown-content menu z-40 mt-2 w-56 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
-                      <li class="menu-title truncate normal-case">{{ user.email }}</li>
-                      <li><button (click)="closeMenu(); auth.logout()">Sign out</button></li>
-                    </ul>
+                    <div tabindex="0" class="dropdown-content z-40 mt-2 w-72 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg">
+                      <p class="text-sm font-medium">{{ user.name }}</p>
+                      <p class="mb-3 text-xs break-all text-muted">{{ user.email }}</p>
+                      <app-theme-switch />
+                      <ul class="menu mt-3 w-full border-t border-base-300 p-0 pt-2">
+                        <li><button (click)="closeMenu(); auth.logout()">Sign out</button></li>
+                      </ul>
+                    </div>
                   </div>
                 } @else {
                   <a routerLink="/login" class="btn btn-ghost btn-sm">Sign in</a>
