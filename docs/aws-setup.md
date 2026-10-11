@@ -112,10 +112,11 @@ sudo systemctl enable --now docker
 sudo usermod -aG docker ec2-user
 
 sudo mkdir -p /usr/local/lib/docker/cli-plugins
-sudo curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" \
-  -o /usr/local/lib/docker/cli-plugins/docker-compose
+sudo curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-$(uname -m)" -o /usr/local/lib/docker/cli-plugins/docker-compose
 sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 ```
+
+> **Paste tip:** the browser terminal can join pasted lines together, which breaks commands that continue onto a second line with `\`. That is why the `curl` command above is one long line. If a command misbehaves after pasting, run it one line at a time. A `curl` that prints "Binary output can mess up your terminal" means its `-o` option got lost this way.
 
 Close the browser terminal and open a new one (so the `docker` group applies), then check:
 
