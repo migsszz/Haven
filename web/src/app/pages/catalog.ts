@@ -35,7 +35,7 @@ const SORT_OPTIONS = [
           />
         </label>
         <select
-          class="select w-full sm:w-56"
+          class="select w-full sm:ml-auto sm:w-56"
           aria-label="Sort by"
           [value]="sort()"
           (change)="navigate({ sort: $any($event.target).value, page: null })"

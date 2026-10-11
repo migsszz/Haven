@@ -32,6 +32,13 @@
   --radius-box: 1rem;
   --radius-field: 0.6rem;
   --radius-selector: 0.6rem;
+  /* daisyUI sizes borders, field heights and badge padding from these. Without them inputs have
+     no outline, badges have no padding, and buttons fall back to the browser's thick border. */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
 }
 
 @plugin 'daisyui/theme' {
@@ -63,6 +70,13 @@
   --radius-box: 1rem;
   --radius-field: 0.6rem;
   --radius-selector: 0.6rem;
+  /* daisyUI sizes borders, field heights and badge padding from these. Without them inputs have
+     no outline, badges have no padding, and buttons fall back to the browser's thick border. */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
 }
 
 html,
