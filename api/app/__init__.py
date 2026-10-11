@@ -38,6 +38,7 @@ def create_app(config: dict | None = None) -> Flask:
     db.init_app(app)
 
     from . import assistant
+    from .admin import bp as admin_bp
     from .auth import bp as auth_bp
     from .orders import bp as orders_bp
     from .products import bp as products_bp
@@ -46,6 +47,7 @@ def create_app(config: dict | None = None) -> Flask:
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(products_bp, url_prefix="/api")
     app.register_blueprint(orders_bp, url_prefix="/api")
+    app.register_blueprint(admin_bp, url_prefix="/api")
     app.register_blueprint(assistant.bp, url_prefix="/api/assistant")
 
     @app.get("/api/health")
