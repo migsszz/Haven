@@ -123,8 +123,10 @@ Close the browser terminal and open a new one (so the `docker` group applies), t
 ```bash
 docker compose version      # prints a version
 aws --version               # the AWS CLI is preinstalled; the deploy script needs it
-aws sts get-caller-identity # should mention "haven-ec2-role"
+aws sts get-caller-identity # the Arn line should contain assumed-role/haven-ec2-role/i-...
 ```
+
+`get-caller-identity` always prints three fields (`UserId`, `Account`, `Arn`). The role name is inside the `Arn` value. If you instead see "Unable to locate credentials", the role isn't attached: in EC2 choose **Actions → Security → Modify IAM role** and pick `haven-ec2-role`.
 
 ### 4b. Create the app's settings file
 
