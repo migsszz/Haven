@@ -7,7 +7,7 @@ import { Icon } from './icon';
   selector: 'app-quantity',
   imports: [Icon],
   template: `
-    <div class="inline-flex items-center rounded-sm border border-base-300" role="group" [attr.aria-label]="label()">
+    <div class="qty inline-flex items-center rounded-field border border-base-300" role="group" [attr.aria-label]="label()">
       <button
         type="button"
         class="btn btn-ghost btn-square btn-sm"

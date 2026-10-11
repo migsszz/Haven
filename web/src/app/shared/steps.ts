@@ -15,7 +15,7 @@ const STEPS = ['Cart', 'Details', 'Confirmed'];
             [class.font-medium]="i + 1 === current()"
           >
             <span
-              class="tabular grid size-6 place-items-center rounded-full border text-xs"
+              class="step-dot tabular grid size-6 place-items-center rounded-full border text-xs"
               [class.border-primary]="i + 1 <= current()"
               [class.bg-primary]="i + 1 === current()"
               [class.text-primary-content]="i + 1 === current()"

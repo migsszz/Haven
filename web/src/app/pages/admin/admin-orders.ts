@@ -21,7 +21,7 @@ const FILTERS: (OrderStatus | '')[] = ['', 'placed', 'shipped', 'delivered', 'ca
   selector: 'app-admin-orders',
   imports: [RouterLink, DatePipe, MoneyPipe, StatusBadge],
   template: `
-    <div class="mb-4 flex gap-6 overflow-x-auto border-b border-base-300 text-sm [scrollbar-width:none]" role="group" aria-label="Filter by status">
+    <div class="cat-tabs mb-4 flex gap-6 overflow-x-auto border-b border-base-300 text-sm [scrollbar-width:none]" role="group" aria-label="Filter by status">
       @for (f of filters; track f) {
         <button
           class="-mb-px border-b py-3 whitespace-nowrap capitalize"

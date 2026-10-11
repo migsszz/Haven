@@ -23,7 +23,7 @@ const SORT_OPTIONS = [
   imports: [RouterLink, MoneyPipe, ProductImage, Icon],
   template: `
     @if (isHome()) {
-      <section class="mb-14 sm:mb-20">
+      <section class="home-hero mb-14 sm:mb-20">
         <p class="eyebrow">The Haven shop</p>
         <h1 class="mt-4 max-w-4xl text-5xl leading-[1.04] sm:text-7xl">Everyday things, <em>done well.</em></h1>
         <p class="mt-6 max-w-xl text-lg text-muted">Tech, home, fashion, and more, all in one cart.</p>
@@ -32,7 +32,7 @@ const SORT_OPTIONS = [
       @if (categories.value(); as list) {
         <nav aria-label="Browse by category" class="mb-14 sm:mb-20">
           <p class="eyebrow mb-4">Browse by category</p>
-          <ul class="grid border-t border-base-300 sm:grid-cols-2 sm:gap-x-12 lg:grid-cols-3">
+          <ul class="cat-index grid border-t border-base-300 sm:grid-cols-2 sm:gap-x-12 lg:grid-cols-3">
             @for (c of list; track c.slug; let i = $index) {
               <li class="border-b border-base-300">
                 <button
@@ -70,7 +70,7 @@ const SORT_OPTIONS = [
            above the categories, which scroll sideways. -->
       <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-end sm:gap-4 sm:border-b sm:border-base-300">
         <div
-          class="-mb-px flex min-w-0 flex-1 gap-6 overflow-x-auto border-b border-base-300 text-sm [scrollbar-width:none] sm:border-b-0"
+          class="cat-tabs -mb-px flex min-w-0 flex-1 gap-6 overflow-x-auto border-b border-base-300 text-sm [scrollbar-width:none] sm:border-b-0"
           role="group"
           aria-label="Categories"
         >
@@ -130,7 +130,7 @@ const SORT_OPTIONS = [
         } @else {
           <div class="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 transition-opacity md:grid-cols-3 lg:grid-cols-4" [class.opacity-60]="products.isLoading()">
             @for (p of result.items; track p.id) {
-              <article class="group">
+              <article class="product-card group">
                 <div class="relative">
                   <a [routerLink]="['/products', p.slug]" class="block" [attr.aria-label]="p.name" tabindex="-1">
                     <app-product-image
@@ -154,7 +154,7 @@ const SORT_OPTIONS = [
                     </button>
                   }
                 </div>
-                <div class="mt-3 space-y-1">
+                <div class="product-body mt-3 space-y-1">
                   <p class="eyebrow">{{ p.category.name }}</p>
                   <div class="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
                     <a [routerLink]="['/products', p.slug]" class="link-quiet line-clamp-2 font-medium">{{ p.name }}</a>

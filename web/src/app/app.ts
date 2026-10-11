@@ -7,11 +7,11 @@ import { CartService } from './core/cart.service';
 import { Assistant } from './shared/assistant';
 import { Icon } from './shared/icon';
 import { SearchBox } from './shared/search-box';
-import { ThemeSwitch } from './shared/theme-switch';
+import { Appearance } from './shared/appearance';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Assistant, Icon, SearchBox, ThemeSwitch],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Assistant, Icon, SearchBox, Appearance],
   template: `
     <a
       href="#main"
@@ -21,13 +21,13 @@ import { ThemeSwitch } from './shared/theme-switch';
     </a>
 
     <div class="flex min-h-screen flex-col">
-      <header class="sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur">
+      <header class="site-header sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur">
         <div class="mx-auto max-w-7xl px-4 sm:px-6">
           <div class="flex h-16 items-center gap-2 sm:gap-6">
             <!-- Menu (small screens) -->
             <div class="dropdown md:hidden">
               <button tabindex="0" class="btn btn-ghost btn-square -ml-2" aria-label="Menu"><app-icon name="menu" /></button>
-              <div tabindex="0" class="dropdown-content z-40 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
+              <div tabindex="0" class="dropdown-content z-40 mt-2 max-h-[calc(100dvh-5rem)] w-72 max-w-[calc(100vw-2rem)] overflow-y-auto rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
                 <ul class="menu w-full p-0">
                   <li><a routerLink="/" (click)="closeMenu()">Shop</a></li>
                   @if (auth.user()) {
@@ -45,7 +45,7 @@ import { ThemeSwitch } from './shared/theme-switch';
                     <p class="text-sm font-medium">{{ user.name }}</p>
                     <p class="mb-3 text-xs break-all text-muted">{{ user.email }}</p>
                   }
-                  <app-theme-switch />
+                  <app-appearance />
                 </div>
                 @if (auth.user()) {
                   <ul class="menu mt-2 w-full border-t border-base-300 p-0 pt-2">
@@ -55,7 +55,7 @@ import { ThemeSwitch } from './shared/theme-switch';
               </div>
             </div>
 
-            <a routerLink="/" class="font-display text-2xl tracking-tight" aria-label="Haven, home">Haven</a>
+            <a routerLink="/" class="wordmark font-display text-2xl tracking-tight" aria-label="Haven, home">Haven</a>
 
             <!-- Navigation (larger screens) -->
             <nav class="hidden items-center gap-6 text-sm md:flex" aria-label="Main">
@@ -105,17 +105,25 @@ import { ThemeSwitch } from './shared/theme-switch';
                     <button tabindex="0" class="btn btn-ghost btn-sm" aria-label="Account menu">
                       <span class="max-w-28 truncate">{{ user.name }}</span>
                     </button>
-                    <div tabindex="0" class="dropdown-content z-40 mt-2 w-72 rounded-box border border-base-300 bg-base-100 p-3 shadow-lg">
+                    <div tabindex="0" class="dropdown-content z-40 mt-2 max-h-[calc(100dvh-5rem)] w-72 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-3 shadow-lg">
                       <p class="text-sm font-medium">{{ user.name }}</p>
                       <p class="mb-3 text-xs break-all text-muted">{{ user.email }}</p>
-                      <app-theme-switch />
+                      <app-appearance />
                       <ul class="menu mt-3 w-full border-t border-base-300 p-0 pt-2">
                         <li><button (click)="closeMenu(); auth.logout()">Sign out</button></li>
                       </ul>
                     </div>
                   </div>
                 } @else {
-                  <a routerLink="/login" class="btn btn-ghost btn-sm">Sign in</a>
+                  <div class="flex items-center">
+                    <div class="dropdown dropdown-end">
+                      <button tabindex="0" class="btn btn-ghost btn-sm btn-square" aria-label="Appearance"><app-icon name="palette" /></button>
+                      <div tabindex="0" class="dropdown-content z-40 mt-2 max-h-[calc(100dvh-5rem)] w-72 overflow-y-auto rounded-box border border-base-300 bg-base-100 p-3 shadow-lg">
+                        <app-appearance />
+                      </div>
+                    </div>
+                    <a routerLink="/login" class="btn btn-ghost btn-sm">Sign in</a>
+                  </div>
                 }
               </div>
 
@@ -140,7 +148,7 @@ import { ThemeSwitch } from './shared/theme-switch';
         <router-outlet />
       </main>
 
-      <footer class="mt-16 border-t border-base-300">
+      <footer class="site-footer mt-16 border-t border-base-300">
         <div class="mx-auto grid max-w-7xl gap-8 px-4 py-12 text-sm sm:grid-cols-3 sm:px-6">
           <div>
             <p class="font-display text-2xl">Haven</p>

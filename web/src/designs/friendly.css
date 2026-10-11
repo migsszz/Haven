@@ -1,0 +1,310 @@
+/*
+ * Friendly: warm, rounded and colourful. Cream paper, a deep aubergine ink, violet buttons with a coral accent,
+ * pill shapes, soft shadows, and a different pastel for every category.
+ */
+
+@plugin 'daisyui/theme' {
+  name: 'friendly';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: #fffaf2;
+  --color-base-200: #fff0dc;
+  --color-base-300: #ecd9bd;
+  --color-base-content: #2a2236;
+  --color-primary: #5b3fd9;
+  --color-primary-content: #ffffff;
+  --color-secondary: #0b766b;
+  --color-secondary-content: #ffffff;
+  --color-accent: #c4301f;
+  --color-accent-content: #ffffff;
+  --color-neutral: #2a2236;
+  --color-neutral-content: #fffaf2;
+  --color-info: #2a67cc;
+  --color-info-content: #ffffff;
+  --color-success: #157a55;
+  --color-success-content: #ffffff;
+  --color-warning: #8f5d00;
+  --color-warning-content: #ffffff;
+  --color-error: #c62d3e;
+  --color-error-content: #ffffff;
+  --radius-box: 1.25rem;
+  --radius-field: 0.9rem;
+  --radius-selector: 0.9rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  --haven-muted: #6a6179;
+  --haven-tone-mix: 92%;
+  --haven-surface: #ffffff;
+  --hero-a: #ffe0b8;
+  --hero-b: #ffc9df;
+  --hero-c: #d6c9ff;
+  --card-shadow: 0 8px 24px -10px rgb(91 63 217 / 0.28);
+  --tile-1: #ffd9ec;
+  --tile-2: #d6e4ff;
+  --tile-3: #ffe8b0;
+  --tile-4: #c9f2dd;
+  --tile-5: #e3d6ff;
+  --tile-6: #ffd3c4;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'friendly-dark';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: #1b1626;
+  --color-base-200: #241d33;
+  --color-base-300: #3d3353;
+  --color-base-content: #f4eefc;
+  --color-primary: #b49cff;
+  --color-primary-content: #1b1626;
+  --color-secondary: #4fd6c6;
+  --color-secondary-content: #1b1626;
+  --color-accent: #ff8a78;
+  --color-accent-content: #1b1626;
+  --color-neutral: #f4eefc;
+  --color-neutral-content: #1b1626;
+  --color-info: #8ab4ff;
+  --color-info-content: #1b1626;
+  --color-success: #5fd6a2;
+  --color-success-content: #1b1626;
+  --color-warning: #f0b94a;
+  --color-warning-content: #1b1626;
+  --color-error: #ff8296;
+  --color-error-content: #1b1626;
+  --radius-box: 1.25rem;
+  --radius-field: 0.9rem;
+  --radius-selector: 0.9rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+  --haven-muted: #b3a8c7;
+  --haven-tone-mix: 34%;
+  --haven-surface: #2a2240;
+  --hero-a: #3b2a63;
+  --hero-b: #5a2b57;
+  --hero-c: #2a3b6e;
+  --card-shadow: 0 8px 24px -10px rgb(0 0 0 / 0.6);
+  --tile-1: #4a2a52;
+  --tile-2: #28386a;
+  --tile-3: #5a4620;
+  --tile-4: #1f5042;
+  --tile-5: #3d2f6e;
+  --tile-6: #5a3128;
+}
+
+[data-design='friendly'] {
+  --font-display: 'Fredoka Variable', 'Nunito Variable', ui-rounded, system-ui, sans-serif;
+  --font-sans: 'Nunito Variable', ui-sans-serif, system-ui, sans-serif;
+  --h-weight: 600;
+  --h-tracking: -0.01em;
+  --photo-radius: 1rem;
+  --card-pad-x: 1rem;
+  --card-pad-y: 0.85rem 1.1rem;
+  --tone-default: #e3dcff;
+  --tone-electronics: #b9d0ff;
+  --tone-home-kitchen: #ffd3a1;
+  --tone-fashion: #ffbfd8;
+  --tone-sports-outdoors: #b4ead0;
+  --tone-books-stationery: #d9c8ff;
+  --tone-toys-games: #ffe08a;
+}
+
+/* ---------- Type and small labels ---------- */
+[data-design='friendly'] body {
+  font-size: 1.03rem;
+}
+[data-design='friendly'] .eyebrow {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+[data-design='friendly'] th.eyebrow,
+[data-design='friendly'] thead .eyebrow {
+  color: var(--color-muted);
+}
+
+/* ---------- Buttons: pills ---------- */
+[data-design='friendly'] .btn {
+  border-radius: 9999px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+[data-design='friendly'] .btn-primary {
+  box-shadow: 0 6px 14px -6px color-mix(in oklab, var(--color-primary) 70%, transparent);
+}
+[data-design='friendly'] .btn-primary:hover {
+  transform: translateY(-1px);
+}
+[data-design='friendly'] .btn-square {
+  border-radius: 9999px;
+}
+[data-design='friendly'] .quick-add {
+  box-shadow: 0 4px 12px -2px rgb(0 0 0 / 0.25);
+}
+
+/* ---------- Header and footer ---------- */
+[data-design='friendly'] .site-header {
+  border-bottom: 0;
+  background: color-mix(in oklab, var(--color-base-100) 88%, transparent);
+  box-shadow: 0 6px 24px -14px rgb(91 63 217 / 0.35);
+}
+[data-design='friendly'] .wordmark {
+  color: var(--color-primary);
+  font-weight: 700;
+  font-size: 1.85rem;
+  letter-spacing: -0.02em;
+}
+[data-design='friendly'] .wordmark::after {
+  content: '';
+  display: inline-block;
+  width: 0.38em;
+  height: 0.38em;
+  margin-left: 0.1em;
+  border-radius: 9999px;
+  background: var(--color-accent);
+}
+[data-design='friendly'] .site-footer {
+  margin-top: 4rem;
+  border-top: 0;
+  background: var(--color-base-200);
+  border-radius: 2rem 2rem 0 0;
+}
+
+/* ---------- Home: hero and category tiles ---------- */
+[data-design='friendly'] .home-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 2.5rem 1.75rem;
+  border-radius: 2rem;
+  background: linear-gradient(120deg, var(--hero-a), var(--hero-b) 55%, var(--hero-c));
+}
+@media (min-width: 640px) {
+  [data-design='friendly'] .home-hero {
+    padding: 4rem 3.5rem;
+  }
+}
+[data-design='friendly'] .home-hero::before,
+[data-design='friendly'] .home-hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+[data-design='friendly'] .home-hero::before {
+  width: 16rem;
+  height: 16rem;
+  right: -4rem;
+  top: -5rem;
+  background: color-mix(in oklab, var(--color-accent) 35%, transparent);
+}
+[data-design='friendly'] .home-hero::after {
+  width: 9rem;
+  height: 9rem;
+  right: 7rem;
+  bottom: -3.5rem;
+  background: color-mix(in oklab, var(--color-primary) 30%, transparent);
+}
+[data-design='friendly'] .home-hero > * {
+  position: relative;
+  z-index: 1;
+}
+[data-design='friendly'] .home-hero .eyebrow {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: var(--haven-surface);
+}
+[data-design='friendly'] .home-hero h1 {
+  font-weight: 700;
+}
+[data-design='friendly'] .home-hero h1 em {
+  font-style: normal;
+  color: var(--color-primary);
+}
+
+[data-design='friendly'] .cat-index {
+  border-top: 0;
+  gap: 0.9rem;
+}
+[data-design='friendly'] .cat-index > li {
+  border: 0;
+}
+[data-design='friendly'] .cat-index > li > button {
+  padding: 1.1rem 1.4rem;
+  border-radius: var(--radius-box);
+  background: var(--tile-1);
+  transition: transform 0.2s ease;
+}
+[data-design='friendly'] .cat-index > li:nth-child(6n + 2) > button { background: var(--tile-2); }
+[data-design='friendly'] .cat-index > li:nth-child(6n + 3) > button { background: var(--tile-3); }
+[data-design='friendly'] .cat-index > li:nth-child(6n + 4) > button { background: var(--tile-4); }
+[data-design='friendly'] .cat-index > li:nth-child(6n + 5) > button { background: var(--tile-5); }
+[data-design='friendly'] .cat-index > li:nth-child(6n + 6) > button { background: var(--tile-6); }
+[data-design='friendly'] .cat-index > li > button:hover {
+  transform: translateY(-3px) rotate(-0.4deg);
+}
+[data-design='friendly'] .cat-index .font-display {
+  font-weight: 600;
+  font-style: normal; /* beats the hover italic from the shared template; this font has no italic */
+}
+
+/* ---------- Category tabs: pills ---------- */
+[data-design='friendly'] .cat-tabs {
+  gap: 0.5rem;
+  padding: 0.6rem 0.1rem;
+}
+[data-design='friendly'] .cat-tabs button {
+  border: 0;
+  margin: 0;
+  padding: 0.5rem 1.05rem;
+  border-radius: 9999px;
+  background: var(--color-base-200);
+  color: var(--color-base-content);
+  font-weight: 700;
+}
+[data-design='friendly'] .cat-tabs button[aria-pressed='true'],
+[data-design='friendly'] .cat-tabs button[aria-selected='true'] {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+
+/* ---------- Product cards ---------- */
+[data-design='friendly'] .product-card {
+  overflow: hidden;
+  border-radius: var(--radius-box);
+  background: var(--haven-surface);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+[data-design='friendly'] .product-card:hover {
+  transform: translateY(-4px);
+}
+[data-design='friendly'] .product-card app-product-image {
+  border-radius: 0;
+}
+
+/* ---------- Small parts ---------- */
+[data-design='friendly'] .status-pill {
+  font-weight: 700;
+}
+[data-design='friendly'] .qty {
+  border-radius: 9999px;
+}
+[data-design='friendly'] .modal-box {
+  border-radius: 1.75rem;
+}
+
+[data-design='friendly'] .product-card .product-body {
+  margin-top: 0;
+}

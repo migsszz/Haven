@@ -25,7 +25,7 @@ import { AdminProducts } from './admin-products';
       </dl>
     }
 
-    <div role="tablist" class="mt-10 mb-6 flex gap-8 border-b border-base-300">
+    <div role="tablist" class="cat-tabs mt-10 mb-6 flex gap-8 border-b border-base-300">
       <button
         role="tab"
         class="-mb-px border-b py-3"
