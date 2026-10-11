@@ -39,7 +39,7 @@ The browser only talks to one origin: nginx serves the Angular build and forward
 | --- | --- |
 | Frontend | Angular 21 (standalone components, signals, `httpResource`), Tailwind CSS 4, DaisyUI 5, Vitest |
 | Backend | Flask 3, psycopg 3 with a connection pool, Pydantic validation, JWT auth, gunicorn, pytest |
-| AI | OpenAI (`openai`, Chat Completions) with function calling |
+| AI | OpenAI (`openai`, Responses API) with function calling |
 | Database | PostgreSQL 17, plain SQL schema |
 | Delivery | Docker, docker compose, GitHub Actions, Amazon ECR, EC2 |
 
@@ -63,6 +63,7 @@ The browser only talks to one origin: nginx serves the Angular build and forward
 - **The cart is sent with each message.** It lives in the browser, so the browser includes it and the `get_cart` tool prices it from the database and flags lines that checkout would reject (sold out, or more than is in stock). `add_to_cart` counts what's already in the cart against stock, and cart edits go back to the browser as the new quantity, so applying one twice is harmless.
 - **Product text is treated as data.** Admins can edit descriptions, so the system prompt says tool results never contain instructions. Tools return only the fields the model needs.
 - **Failures stay contained.** A tool that errors returns the error to the model rather than failing the request. A model outage is a clean `502`. Requests are rate-limited per user or IP.
+- **OpenAI keeps the tool-loop state.** The adapter uses the Responses API, because reasoning models reject function tools on Chat Completions. Within one message, each step is chained with `previous_response_id`, so only the new tool results are sent. That means OpenAI stores those responses under its normal retention policy; the app itself still keeps no chat state.
 - **Provider-agnostic loop.** The loop only knows `ModelTurn` and `ToolCall` ([llm.py](api/app/assistant/llm.py)). OpenAI sits behind a small adapter, and the tests drive the loop with a scripted fake model, so they run offline.
 
 ## Project layout
