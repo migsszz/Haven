@@ -126,6 +126,8 @@ The API tests cover the checkout transaction (server-side pricing, merged duplic
 
 ## Deploying to AWS
 
+**New to this? Follow the full step-by-step guide: [docs/aws-setup.md](docs/aws-setup.md).** The summary below is the short version.
+
 CI runs the tests on every push and pull request. On pushes to `main`, once the variables below are set, it also builds both images, pushes them to ECR, and restarts the stack on an EC2 instance.
 
 One-time setup:
@@ -137,7 +139,7 @@ One-time setup:
 5. Push to `main`. After the first deploy, create an admin with `docker compose exec api flask --app wsgi create-admin …` on the instance.
 
 > [!NOTE]
-> Set an AWS billing alert. A single small EC2 instance costs a few dollars a month. Stop it when you're not using it.
+> Set an AWS billing alert. A `t3.small` instance plus its public IP costs roughly $15-25 a month. Stop it when you're not using it.
 
 Photos are stored on the `uploads` Docker volume, next to the database volume, so back both up (or move to S3) before relying on them.
 
