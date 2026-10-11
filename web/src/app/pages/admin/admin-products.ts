@@ -99,7 +99,7 @@ const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
     }
 
     <dialog #editor class="modal" (close)="editing.set(undefined)">
-      <form [formGroup]="form" (ngSubmit)="save()" class="modal-box max-w-xl rounded-sm" novalidate>
+      <form [formGroup]="form" (ngSubmit)="save()" class="modal-box max-w-xl" novalidate>
         <h2 class="text-3xl">{{ editing() ? 'Edit product' : 'New product' }}</h2>
         <fieldset class="fieldset mt-4">
           <label class="label" for="p-name">Name</label>

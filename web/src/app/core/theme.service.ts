@@ -2,36 +2,62 @@ import { effect, Injectable, signal } from '@angular/core';
 
 import { readStorage, writeStorage } from './storage';
 
+/** Light, dark, or follow the device. */
 export type ThemeMode = 'system' | 'light' | 'dark';
+/** The look of the site. Each one has a light and a dark version. */
+export type DesignName = 'editorial' | 'friendly' | 'bold';
 
-const KEY = 'haven.theme';
-const THEMES: Record<Exclude<ThemeMode, 'system'>, string> = { light: 'haven', dark: 'haven-dark' };
+const MODE_KEY = 'haven.theme';
+const DESIGN_KEY = 'haven.design';
+
+/** The stylesheet's theme name for each design (editorial predates the others and kept its original name). */
+const THEME_BASE: Record<DesignName, string> = { editorial: 'haven', friendly: 'friendly', bold: 'bold' };
 
 /**
- * Light, dark, or follow the device. "System" sets no theme at all, so the stylesheet's own
- * prefers-color-scheme rule decides. The choice is remembered in the browser, and index.html
- * applies it before the first paint so a dark-mode shopper never sees a flash of light.
+ * Two independent choices: the design (Editorial, Friendly or Bold) and the mode (Light, Dark or System).
+ * Together they pick one of six stylesheet themes. Both are remembered in the browser, and index.html applies
+ * them before the first paint (using the same rule as below) so nobody sees a flash of the wrong look.
  */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
-  readonly mode = signal<ThemeMode>(this.stored());
+  readonly mode = signal<ThemeMode>(this.storedMode());
+  readonly design = signal<DesignName>(this.storedDesign());
+
+  /** Whether the device itself is set to dark; only matters while the mode is System. */
+  private readonly deviceIsDark = signal(false);
 
   constructor() {
+    const query = typeof matchMedia === 'function' ? matchMedia('(prefers-color-scheme: dark)') : null;
+    if (query) {
+      this.deviceIsDark.set(query.matches);
+      query.addEventListener('change', (e) => this.deviceIsDark.set(e.matches));
+    }
+
     effect(() => {
       const root = document.documentElement;
-      const mode = this.mode();
-      if (mode === 'system') root.removeAttribute('data-theme');
-      else root.setAttribute('data-theme', THEMES[mode]);
+      const dark = this.mode() === 'system' ? this.deviceIsDark() : this.mode() === 'dark';
+      root.setAttribute('data-design', this.design());
+      root.setAttribute('data-theme', THEME_BASE[this.design()] + (dark ? '-dark' : ''));
     });
   }
 
-  set(mode: ThemeMode): void {
+  setMode(mode: ThemeMode): void {
     this.mode.set(mode);
-    writeStorage(KEY, mode === 'system' ? null : mode);
+    writeStorage(MODE_KEY, mode === 'system' ? null : mode);
   }
 
-  private stored(): ThemeMode {
-    const value = readStorage<unknown>(KEY, 'system');
+  setDesign(design: DesignName): void {
+    this.design.set(design);
+    writeStorage(DESIGN_KEY, design === 'editorial' ? null : design);
+  }
+
+  private storedMode(): ThemeMode {
+    const value = readStorage<unknown>(MODE_KEY, 'system');
     return value === 'light' || value === 'dark' ? value : 'system';
+  }
+
+  private storedDesign(): DesignName {
+    const value = readStorage<unknown>(DESIGN_KEY, 'editorial');
+    return value === 'friendly' || value === 'bold' ? value : 'editorial';
   }
 }

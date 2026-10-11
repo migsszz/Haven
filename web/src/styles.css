@@ -3,6 +3,10 @@
   themes: false;
 }
 
+/* The other two designs. Each defines its own light and dark theme and its own overrides. */
+@import './designs/friendly.css';
+@import './designs/bold.css';
+
 /* Fonts are self-hosted (latin only), so the site makes no third-party requests. */
 @font-face {
   font-family: 'Fraunces Variable';
@@ -26,12 +30,43 @@
   src: url(../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2) format('woff2-variations');
 }
 
+@font-face {
+  font-family: 'Fredoka Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url(../node_modules/@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2) format('woff2-variations');
+}
+@font-face {
+  font-family: 'Nunito Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 1000;
+  src: url(../node_modules/@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2) format('woff2-variations');
+}
+@font-face {
+  font-family: 'Space Grotesk Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url(../node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2) format('woff2-variations');
+}
+
 @theme {
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
   /* Secondary text. Checked for contrast (4.5:1 or better) against the page background in both themes. */
   --color-muted: var(--haven-muted);
 }
+
+/*
+ * The designs. Haven has three looks, each with a light and a dark theme (six daisyUI themes in all):
+ *   editorial  "haven" / "haven-dark"      quiet: paper, ink, one terracotta accent, hairlines  (this file)
+ *   friendly   "friendly" / "friendly-dark" warm and rounded, with colour                        (designs/friendly.css)
+ *   bold       "bold" / "bold-dark"         high contrast, thick lines, hard shadows              (designs/bold.css)
+ * ThemeService sets data-design and data-theme on <html>. The pages share one set of templates; a design
+ * changes them only through the tokens below and the overrides in its own file.
+ */
 
 /*
  * Haven: a quiet, editorial look. Warm paper, near-black ink, one terracotta accent, hairline rules, and
@@ -76,6 +111,7 @@
   --noise: 0;
   --haven-muted: #6a655c;
   --haven-tone-mix: 55%;
+  --haven-surface: #fbf9f5;
 }
 
 @plugin 'daisyui/theme' {
@@ -114,6 +150,7 @@
   --noise: 0;
   --haven-muted: #a39d90;
   --haven-tone-mix: 16%;
+  --haven-surface: #141311;
 }
 
 html,
@@ -131,8 +168,9 @@ body {
   h2,
   h3 {
     font-family: var(--font-display);
-    font-weight: 400;
-    letter-spacing: -0.015em;
+    font-weight: var(--h-weight, 400);
+    letter-spacing: var(--h-tracking, -0.015em);
+    text-transform: var(--h-case, none);
     font-optical-sizing: auto;
   }
 
@@ -219,4 +257,28 @@ body {
       opacity: 1;
     }
   }
+}
+
+/*
+ * Hooks the designs customise. These are the Editorial values; friendly.css and bold.css override them.
+ * They sit outside any @layer so they win over utility classes. :where() gives the defaults no specificity
+ * of their own, so a design's values win no matter which comes first in the file.
+ */
+:where(:root) {
+  --tone-default: #d8d4cb;
+  --tone-electronics: #cfd6de;
+  --tone-home-kitchen: #e2d6c2;
+  --tone-fashion: #e0cfcf;
+  --tone-sports-outdoors: #cddccd;
+  --tone-books-stationery: #dcd8c8;
+  --tone-toys-games: #e6d9bd;
+  --photo-radius: 0.125rem;
+}
+
+app-product-image {
+  border-radius: var(--photo-radius);
+}
+
+.product-body {
+  padding: var(--card-pad-y, 0) var(--card-pad-x, 0);
 }

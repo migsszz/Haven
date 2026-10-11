@@ -1,0 +1,334 @@
+/*
+ * Bold: loud, high contrast and modern. Black and white with electric blue and acid yellow, square corners,
+ * thick black outlines, hard offset shadows, and big uppercase headlines in Space Grotesk.
+ */
+
+@plugin 'daisyui/theme' {
+  name: 'bold';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: #ffffff;
+  --color-base-200: #f2f2ec;
+  --color-base-300: #cfcfc6;
+  --color-base-content: #0b0b0f;
+  --color-primary: #0b0b0f;
+  --color-primary-content: #ffffff;
+  --color-secondary: #dfff2e;
+  --color-secondary-content: #0b0b0f;
+  --color-accent: #2433ff;
+  --color-accent-content: #ffffff;
+  --color-neutral: #0b0b0f;
+  --color-neutral-content: #ffffff;
+  --color-info: #1f5fff;
+  --color-info-content: #ffffff;
+  --color-success: #0b7a43;
+  --color-success-content: #ffffff;
+  --color-warning: #7f5200;
+  --color-warning-content: #ffffff;
+  --color-error: #c9162a;
+  --color-error-content: #ffffff;
+  --radius-box: 0;
+  --radius-field: 0;
+  --radius-selector: 0;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 2px;
+  --depth: 0;
+  --noise: 0;
+  --haven-muted: #55555c;
+  --haven-tone-mix: 100%;
+  --haven-surface: #ffffff;
+  --ink: #0b0b0f;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'bold-dark';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: #0b0b0e;
+  --color-base-200: #17171c;
+  --color-base-300: #3a3a44;
+  --color-base-content: #f6f6f2;
+  --color-primary: #f6f6f2;
+  --color-primary-content: #0b0b0e;
+  --color-secondary: #dfff2e;
+  --color-secondary-content: #0b0b0e;
+  --color-accent: #8c94ff;
+  --color-accent-content: #0b0b0e;
+  --color-neutral: #f6f6f2;
+  --color-neutral-content: #0b0b0e;
+  --color-info: #8fb0ff;
+  --color-info-content: #0b0b0e;
+  --color-success: #4be08f;
+  --color-success-content: #0b0b0e;
+  --color-warning: #f2b84b;
+  --color-warning-content: #0b0b0e;
+  --color-error: #ff7482;
+  --color-error-content: #0b0b0e;
+  --radius-box: 0;
+  --radius-field: 0;
+  --radius-selector: 0;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 2px;
+  --depth: 0;
+  --noise: 0;
+  --haven-muted: #a6a6b0;
+  --haven-tone-mix: 30%;
+  --haven-surface: #0b0b0e;
+  --ink: #f6f6f2;
+}
+
+[data-design='bold'] {
+  --font-display: 'Space Grotesk Variable', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --h-weight: 700;
+  --h-tracking: -0.035em;
+  --h-case: uppercase;
+  --photo-radius: 0;
+  --card-pad-x: 0.85rem;
+  --card-pad-y: 0.75rem 0.9rem;
+  --tone-default: #e7e7df;
+  --tone-electronics: #b8c0ff;
+  --tone-home-kitchen: #ffd08a;
+  --tone-fashion: #ffb3c7;
+  --tone-sports-outdoors: #b9f0a0;
+  --tone-books-stationery: #e8e4d2;
+  --tone-toys-games: #fff06a;
+}
+
+/* ---------- Everything with a hairline gets a proper outline ---------- */
+[data-design='bold'] [class*='border-base-300'] {
+  border-color: var(--ink);
+}
+[data-design='bold'] .input,
+[data-design='bold'] .select,
+[data-design='bold'] .textarea {
+  --input-color: var(--ink);
+}
+[data-design='bold'] ::selection {
+  background: var(--color-secondary);
+  color: #0b0b0f;
+}
+[data-design='bold'] h1,
+[data-design='bold'] h2,
+[data-design='bold'] h3 {
+  line-height: 0.98;
+}
+
+/* ---------- Small labels ---------- */
+[data-design='bold'] .eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: var(--color-base-content);
+}
+[data-design='bold'] p.eyebrow {
+  display: block;
+  width: fit-content;
+  padding: 0.15rem 0.5rem;
+  background: var(--color-secondary);
+  color: #0b0b0f;
+}
+[data-design='bold'] thead .eyebrow,
+[data-design='bold'] th.eyebrow {
+  color: var(--color-base-content);
+}
+
+/* ---------- Buttons: slabs with a hard shadow ---------- */
+[data-design='bold'] .btn {
+  border-radius: 0;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+[data-design='bold'] .btn-primary,
+[data-design='bold'] .btn-outline,
+[data-design='bold'] .btn-error,
+[data-design='bold'] .quick-add {
+  border-color: var(--ink);
+  box-shadow: 4px 4px 0 var(--color-accent);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+[data-design='bold'] .btn-outline {
+  box-shadow: 4px 4px 0 var(--ink);
+}
+[data-design='bold'] .btn-primary:hover,
+[data-design='bold'] .btn-outline:hover,
+[data-design='bold'] .btn-error:hover,
+[data-design='bold'] .quick-add:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+[data-design='bold'] .btn-primary:active,
+[data-design='bold'] .btn-outline:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--ink);
+}
+[data-design='bold'] .btn-primary:disabled,
+[data-design='bold'] .btn-outline:disabled {
+  box-shadow: none;
+}
+[data-design='bold'] .btn-ghost {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+[data-design='bold'] .input:focus-within,
+[data-design='bold'] .select:focus,
+[data-design='bold'] .textarea:focus {
+  box-shadow: 4px 4px 0 var(--color-accent);
+}
+
+/* ---------- Header and footer ---------- */
+[data-design='bold'] .site-header {
+  border-bottom: 2px solid var(--ink);
+  background: var(--color-base-100);
+  backdrop-filter: none;
+}
+[data-design='bold'] .wordmark {
+  padding: 0.05rem 0.55rem 0.1rem;
+  border: 2px solid var(--ink);
+  background: var(--color-secondary);
+  color: #0b0b0f;
+  font-weight: 700;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  letter-spacing: -0.05em;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+[data-design='bold'] .site-footer {
+  margin-top: 5rem;
+  border-top: 2px solid var(--ink);
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+  --color-muted: color-mix(in oklab, var(--color-primary-content) 72%, var(--color-primary));
+}
+
+/* ---------- Home: hero and category grid ---------- */
+[data-design='bold'] .home-hero {
+  padding: 2rem 1.5rem 2.25rem;
+  border: 2px solid var(--ink);
+  background: var(--color-secondary);
+  box-shadow: 8px 8px 0 var(--ink);
+  color: #0b0b0f;
+  --color-muted: #2c2c33;
+}
+@media (min-width: 640px) {
+  [data-design='bold'] .home-hero {
+    padding: 3.5rem 3rem 3.75rem;
+  }
+}
+[data-design='bold'] .home-hero p.eyebrow {
+  background: #0b0b0f;
+  color: var(--color-secondary);
+}
+[data-design='bold'] .home-hero h1 {
+  font-size: clamp(2.75rem, 9vw, 6.5rem);
+  line-height: 1.12;
+}
+[data-design='bold'] .home-hero h1 em {
+  font-style: normal;
+  padding: 0 0.15em;
+  background: #0b0b0f;
+  color: var(--color-secondary);
+}
+
+[data-design='bold'] .cat-index {
+  border-top: 2px solid var(--ink);
+  gap: 0;
+}
+[data-design='bold'] .cat-index > li {
+  border: 2px solid var(--ink);
+  margin: 0 -2px -2px 0;
+}
+[data-design='bold'] .cat-index > li > button {
+  padding: 1.25rem 1.1rem;
+  transition: background-color 0.1s ease;
+}
+[data-design='bold'] .cat-index > li > button:hover,
+[data-design='bold'] .cat-index > li > button:focus-visible {
+  background: var(--color-secondary);
+  color: #0b0b0f;
+  --color-muted: #2c2c33;
+}
+[data-design='bold'] .cat-index .font-display {
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+}
+
+/* ---------- Category tabs: blocks ---------- */
+[data-design='bold'] .cat-tabs {
+  gap: 0.5rem;
+  padding: 0.6rem 0.2rem 0.6rem 0;
+}
+[data-design='bold'] .cat-tabs button {
+  margin: 0;
+  padding: 0.4rem 0.8rem;
+  border: 2px solid var(--ink);
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+[data-design='bold'] .cat-tabs button[aria-pressed='true'],
+[data-design='bold'] .cat-tabs button[aria-selected='true'] {
+  background: var(--color-primary);
+  color: var(--color-primary-content);
+}
+[data-design='bold'] .cat-tabs button:hover {
+  background: var(--color-secondary);
+  color: #0b0b0f;
+}
+
+/* ---------- Product cards ---------- */
+[data-design='bold'] .product-card {
+  border: 2px solid var(--ink);
+  background: var(--haven-surface);
+  box-shadow: 6px 6px 0 var(--ink);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+[data-design='bold'] .product-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0 var(--color-accent);
+}
+[data-design='bold'] .product-card app-product-image {
+  border-bottom: 2px solid var(--ink);
+}
+
+/* ---------- Small parts ---------- */
+[data-design='bold'] .status-pill,
+[data-design='bold'] .step-dot {
+  border-radius: 0;
+}
+[data-design='bold'] .status-pill {
+  border-width: 2px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+[data-design='bold'] .modal-box {
+  border: 2px solid var(--ink);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+[data-design='bold'] .dropdown-content {
+  box-shadow: 6px 6px 0 var(--ink);
+}
+[data-design='bold'] .skeleton {
+  background: var(--color-base-200);
+}
+
+[data-design='bold'] .product-card .product-body {
+  margin-top: 0;
+}

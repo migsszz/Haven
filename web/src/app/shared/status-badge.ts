@@ -13,7 +13,7 @@ const STYLES: Record<OrderStatus, string> = {
 @Component({
   selector: 'app-status-badge',
   template: `<span
-    class="inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium tracking-wide whitespace-nowrap capitalize"
+    class="status-pill inline-block rounded-full border px-2.5 py-0.5 text-xs font-medium tracking-wide whitespace-nowrap capitalize"
     [class]="style()"
     >{{ status() }}</span
   >`,

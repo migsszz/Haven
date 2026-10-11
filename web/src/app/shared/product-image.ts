@@ -1,14 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 
-// Quiet stone tones for products without a photo, one per category.
-const TONES: Record<string, string> = {
-  electronics: '#cfd6de',
-  'home-kitchen': '#e2d6c2',
-  fashion: '#e0cfcf',
-  'sports-outdoors': '#cddccd',
-  'books-stationery': '#dcd8c8',
-  'toys-games': '#e6d9bd',
-};
+// Placeholder tiles take their colour from --tone-<category> in the stylesheet, so each design can restyle them.
+const KNOWN = new Set(['electronics', 'home-kitchen', 'fashion', 'sports-outdoors', 'books-stationery', 'toys-games']);
 
 @Component({
   selector: 'app-product-image',
@@ -34,9 +27,10 @@ export class ProductImage {
   readonly src = input<string | null>(null);
   readonly large = input(false);
 
-  // Mixed into the page colour so the tint also works in the dark theme.
+  // Mixed into the page colour, so the tint also works in the dark themes.
   protected readonly background = computed(
-    () => `color-mix(in oklab, ${TONES[this.category()] ?? '#d8d4cb'} var(--haven-tone-mix, 55%), var(--color-base-200))`,
+    () =>
+      `color-mix(in oklab, var(--tone-${KNOWN.has(this.category()) ? this.category() : 'default'}) var(--haven-tone-mix, 55%), var(--color-base-200))`,
   );
   protected readonly initials = computed(() =>
     this.name()
