@@ -4,81 +4,100 @@ import { booleanAttribute, Component, inject, input, numberAttribute, signal } f
 import { RouterLink } from '@angular/router';
 
 import { ApiService, apiErrorMessage } from '../core/api.service';
-import { Order } from '../core/models';
+import { Order, OrderStatus } from '../core/models';
+import { Icon } from '../shared/icon';
 import { MoneyPipe } from '../shared/money.pipe';
 import { StatusBadge } from '../shared/status-badge';
+import { Steps } from '../shared/steps';
+
+const PROGRESS: OrderStatus[] = ['placed', 'shipped', 'delivered'];
 
 @Component({
   selector: 'app-order-detail',
-  imports: [RouterLink, DatePipe, MoneyPipe, StatusBadge],
+  imports: [RouterLink, DatePipe, MoneyPipe, StatusBadge, Steps, Icon],
   template: `
-    <a routerLink="/orders" class="btn btn-ghost btn-sm mb-4">&larr; All orders</a>
-
     @if (placed()) {
-      <div role="status" class="alert alert-success mb-4">Thanks! Your order has been placed.</div>
+      <app-steps [current]="3" />
     }
+    <a routerLink="/orders" class="link-quiet mt-8 inline-flex items-center gap-2 text-sm text-muted">
+      <app-icon name="arrow-left" /> All orders
+    </a>
 
     @if (order.error()) {
-      <div class="rounded-box bg-base-100 p-10 text-center">
-        <p class="font-medium">We couldn't find that order.</p>
+      <div class="py-20 text-center">
+        <p class="font-display text-3xl">We couldn't find that order.</p>
       </div>
     } @else if (order.value(); as o) {
-      <div class="rounded-box bg-base-100 p-5 shadow-sm">
-        <div class="flex flex-wrap items-center gap-3">
-          <h1 class="text-2xl font-bold">Order #{{ o.id }}</h1>
+      <header class="mt-6">
+        @if (placed()) {
+          <p class="eyebrow text-success">Thank you</p>
+          <h1 class="mt-3 text-4xl sm:text-5xl">Your order is placed.</h1>
+        } @else {
+          <p class="eyebrow">{{ o.createdAt | date: 'longDate' }}</p>
+          <h1 class="mt-3 text-4xl sm:text-5xl">Order #{{ o.id }}</h1>
+        }
+        <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-muted">
           <app-status-badge [status]="o.status" />
-          <span class="text-sm text-base-content/60">{{ o.createdAt | date: 'medium' }}</span>
+          @if (placed()) {
+            <span>Order #{{ o.id }} &middot; {{ o.createdAt | date: 'medium' }}</span>
+          } @else {
+            <span>{{ o.createdAt | date: 'shortTime' }}</span>
+          }
         </div>
+      </header>
 
-        <div class="mt-5 overflow-x-auto">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th class="text-right">Price</th>
-                <th class="text-right">Qty</th>
-                <th class="text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of o.items; track item.productId) {
-                <tr>
-                  <td>{{ item.productName }}</td>
-                  <td class="text-right">{{ item.unitPriceCents | money }}</td>
-                  <td class="text-right">{{ item.quantity }}</td>
-                  <td class="text-right">{{ item.unitPriceCents * item.quantity | money }}</td>
-                </tr>
-              }
-            </tbody>
-            <tfoot>
-              <tr>
-                <th colspan="3" class="text-right">Total</th>
-                <th class="text-right">{{ o.totalCents | money }}</th>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+      @if (o.status === 'cancelled') {
+        <p class="mt-8 border border-base-300 p-4 text-sm text-muted">This order was cancelled and its items went back into stock.</p>
+      } @else {
+        <ol class="mt-10 grid max-w-2xl grid-cols-3" aria-label="Order progress">
+          @for (step of progress; track step; let i = $index) {
+            <li class="relative pt-5 text-sm" [class.text-muted]="i > progressIndex(o.status)">
+              <span class="absolute top-0 left-0 h-px w-full" [class]="i <= progressIndex(o.status) ? 'bg-primary' : 'bg-base-300'"></span>
+              <span class="absolute -top-1 left-0 size-2 rounded-full" [class]="i <= progressIndex(o.status) ? 'bg-primary' : 'bg-base-300'"></span>
+              <span class="capitalize" [class.font-medium]="i === progressIndex(o.status)">{{ step }}</span>
+            </li>
+          }
+        </ol>
+      }
 
-        <div class="mt-5">
-          <h2 class="font-semibold">Ship to</h2>
-          <p>{{ o.shippingName }}</p>
-          <p class="whitespace-pre-line text-base-content/70">{{ o.shippingAddress }}</p>
-        </div>
-
-        @if (o.status === 'placed') {
-          <div class="mt-6 flex items-center gap-3">
-            <button class="btn btn-outline btn-error btn-sm" [disabled]="cancelling()" (click)="cancel(o.id)">
-              Cancel order
-            </button>
-            <span class="text-sm text-base-content/60">You can cancel until the order ships.</span>
+      <div class="mt-12 grid gap-12 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <section aria-labelledby="items-heading">
+          <p id="items-heading" class="eyebrow">Items</p>
+          <ul class="mt-4 border-t border-base-300">
+            @for (item of o.items; track item.productId) {
+              <li class="flex items-baseline justify-between gap-4 border-b border-base-300 py-4">
+                <div>
+                  <p class="font-medium">{{ item.productName }}</p>
+                  <p class="tabular text-sm text-muted">{{ item.quantity }} &times; {{ item.unitPriceCents | money }}</p>
+                </div>
+                <span class="tabular">{{ item.unitPriceCents * item.quantity | money }}</span>
+              </li>
+            }
+          </ul>
+          <div class="mt-5 flex items-baseline justify-between">
+            <span>Total</span>
+            <span class="tabular font-display text-3xl">{{ o.totalCents | money }}</span>
           </div>
-        }
-        @if (error()) {
-          <div role="alert" class="alert alert-error mt-4">{{ error() }}</div>
-        }
+        </section>
+
+        <aside>
+          <p class="eyebrow">Ship to</p>
+          <p class="mt-4 border-t border-base-300 pt-4 font-medium">{{ o.shippingName }}</p>
+          <p class="whitespace-pre-line text-muted">{{ o.shippingAddress }}</p>
+
+          @if (o.status === 'placed') {
+            <div class="mt-8 border-t border-base-300 pt-6">
+              <button class="btn btn-outline btn-error w-full" [disabled]="cancelling()" (click)="cancel(o.id)">Cancel order</button>
+              <p class="mt-2 text-xs text-muted">You can cancel until the order ships.</p>
+            </div>
+          }
+          @if (error()) {
+            <div role="alert" class="alert alert-error alert-soft mt-4">{{ error() }}</div>
+          }
+        </aside>
       </div>
     } @else {
-      <div class="skeleton h-80"></div>
+      <div class="skeleton mt-8 h-80"></div>
     }
   `,
 })
@@ -89,8 +108,13 @@ export class OrderDetailPage {
   readonly placed = input(false, { transform: booleanAttribute });
 
   protected readonly order = httpResource<Order>(() => `/api/orders/${this.id()}`);
+  protected readonly progress = PROGRESS;
   protected readonly cancelling = signal(false);
   protected readonly error = signal<string | null>(null);
+
+  protected progressIndex(status: OrderStatus): number {
+    return PROGRESS.indexOf(status);
+  }
 
   protected async cancel(id: number): Promise<void> {
     if (!confirm('Cancel this order? Items go back into stock.')) return;

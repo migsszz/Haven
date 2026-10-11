@@ -6,30 +6,33 @@ import { apiError, ApiService } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
 import { CartService } from '../core/cart.service';
 import { MoneyPipe } from '../shared/money.pipe';
+import { ProductImage } from '../shared/product-image';
+import { Steps } from '../shared/steps';
 
 @Component({
   selector: 'app-checkout',
-  imports: [ReactiveFormsModule, RouterLink, MoneyPipe],
+  imports: [ReactiveFormsModule, RouterLink, MoneyPipe, ProductImage, Steps],
   template: `
-    <h1 class="mb-4 text-2xl font-bold">Checkout</h1>
+    <app-steps [current]="2" />
+    <h1 class="mt-8 text-4xl sm:text-5xl">Checkout</h1>
 
     @if (cart.isEmpty()) {
-      <div class="rounded-box bg-base-100 p-10 text-center">
-        <p class="font-medium">Your cart is empty.</p>
-        <a routerLink="/" class="btn btn-primary btn-sm mt-3">Start shopping</a>
+      <div class="py-20 text-center">
+        <p class="font-display text-3xl">Your cart is empty.</p>
+        <a routerLink="/" class="btn btn-primary mt-6">Start shopping</a>
       </div>
     } @else {
-      <div class="grid gap-6 lg:grid-cols-[1fr_20rem]">
-        <form [formGroup]="form" (ngSubmit)="placeOrder()" class="rounded-box bg-base-100 p-5 shadow-sm" novalidate>
-          <h2 class="mb-3 font-semibold">Shipping</h2>
-          <fieldset class="fieldset">
+      <div class="mt-8 grid gap-12 lg:grid-cols-[minmax(0,1fr)_24rem]">
+        <form [formGroup]="form" (ngSubmit)="placeOrder()" class="max-w-xl" novalidate>
+          <p class="eyebrow border-t border-base-300 pt-6">Shipping</p>
+          <fieldset class="fieldset mt-4">
             <label class="label" for="shippingName">Full name</label>
             <input id="shippingName" class="input w-full" formControlName="shippingName" autocomplete="name" />
             @if (form.controls.shippingName.touched && form.controls.shippingName.invalid) {
-              <p class="text-error">Enter the recipient's name.</p>
+              <p class="text-sm text-error">Enter the recipient's name.</p>
             }
 
-            <label class="label mt-2" for="shippingAddress">Address</label>
+            <label class="label mt-3" for="shippingAddress">Address</label>
             <textarea
               id="shippingAddress"
               class="textarea w-full"
@@ -38,17 +41,17 @@ import { MoneyPipe } from '../shared/money.pipe';
               autocomplete="street-address"
             ></textarea>
             @if (form.controls.shippingAddress.touched && form.controls.shippingAddress.invalid) {
-              <p class="text-error">Enter a full delivery address.</p>
+              <p class="text-sm text-error">Enter a full delivery address.</p>
             }
           </fieldset>
 
-          <h2 class="mb-2 mt-5 font-semibold">Payment</h2>
-          <div class="alert alert-info alert-soft text-sm">
+          <p class="eyebrow mt-10 border-t border-base-300 pt-6">Payment</p>
+          <p class="mt-4 border border-base-300 p-4 text-sm text-muted">
             This is a demo store, so payment is simulated. No card details are collected.
-          </div>
+          </p>
 
           @if (error()) {
-            <div role="alert" class="alert alert-error mt-4">
+            <div role="alert" class="alert alert-error alert-soft mt-6">
               <div>
                 <p>{{ error() }}</p>
                 @for (problem of problems(); track problem.productId) {
@@ -61,7 +64,7 @@ import { MoneyPipe } from '../shared/money.pipe';
             </div>
           }
 
-          <button class="btn btn-primary mt-5 w-full" [disabled]="submitting()">
+          <button class="btn btn-primary mt-8 w-full" [disabled]="submitting()">
             @if (submitting()) {
               <span class="loading loading-spinner loading-sm"></span>
             }
@@ -69,20 +72,29 @@ import { MoneyPipe } from '../shared/money.pipe';
           </button>
         </form>
 
-        <aside class="h-fit rounded-box bg-base-100 p-5 shadow-sm">
-          <h2 class="mb-3 font-semibold">Order summary</h2>
-          <ul class="space-y-2 text-sm">
+        <aside class="h-fit border-t border-base-300 pt-6 lg:sticky lg:top-24">
+          <p class="eyebrow">Order summary</p>
+          <ul class="mt-5 space-y-4">
             @for (line of cart.lines(); track line.productId) {
-              <li class="flex justify-between gap-2">
-                <span class="truncate">{{ line.quantity }} &times; {{ line.name }}</span>
-                <span>{{ line.priceCents * line.quantity | money }}</span>
+              <li class="flex items-center gap-4 text-sm">
+                <span class="relative w-14 shrink-0">
+                  <app-product-image class="aspect-[4/5] rounded-sm" [name]="line.name" [category]="line.categorySlug" [src]="line.imageUrl" />
+                  <span class="tabular absolute -top-2 -right-2 grid size-5 place-items-center rounded-full bg-primary text-xs text-primary-content">
+                    {{ line.quantity }}
+                  </span>
+                </span>
+                <span class="min-w-0 flex-1">{{ line.name }}</span>
+                <span class="tabular">{{ line.priceCents * line.quantity | money }}</span>
               </li>
             }
           </ul>
-          <div class="divider my-2"></div>
-          <div class="flex justify-between font-semibold">
+          <dl class="mt-6 space-y-3 border-t border-base-300 pt-5 text-sm">
+            <div class="flex justify-between"><dt>Subtotal</dt><dd class="tabular">{{ cart.subtotalCents() | money }}</dd></div>
+            <div class="flex justify-between"><dt>Shipping</dt><dd>Free</dd></div>
+          </dl>
+          <div class="mt-5 flex items-baseline justify-between border-t border-base-300 pt-5">
             <span>Total</span>
-            <span>{{ cart.subtotalCents() | money }}</span>
+            <span class="tabular font-display text-3xl">{{ cart.subtotalCents() | money }}</span>
           </div>
         </aside>
       </div>

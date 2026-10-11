@@ -1,9 +1,10 @@
 import { httpResource } from '@angular/common/http';
-import { Component, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, inject, OnDestroy, output, signal, viewChild } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { ApiService, apiErrorMessage, ProductInput } from '../../core/api.service';
 import { Category, Page, Product } from '../../core/models';
+import { Icon } from '../../shared/icon';
 import { MoneyPipe } from '../../shared/money.pipe';
 import { ProductImage } from '../../shared/product-image';
 
@@ -13,64 +14,81 @@ const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 @Component({
   selector: 'app-admin-products',
-  imports: [ReactiveFormsModule, MoneyPipe, ProductImage],
+  imports: [ReactiveFormsModule, MoneyPipe, ProductImage, Icon],
   template: `
-    <div class="mb-3 flex flex-wrap items-center gap-2">
-      <label class="input input-sm w-full sm:max-w-xs">
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      <label class="input w-full sm:max-w-xs">
+        <app-icon name="search" />
         <span class="sr-only">Search products</span>
         <input type="search" placeholder="Search products" (input)="onSearch($any($event.target).value)" />
       </label>
-      <button class="btn btn-primary btn-sm sm:ml-auto" (click)="openEditor(null)">New product</button>
+      <button class="btn btn-primary sm:ml-auto" (click)="openEditor(null)">New product</button>
     </div>
 
+    @if (rowError()) {
+      <div role="alert" class="alert alert-error alert-soft mb-4">{{ rowError() }}</div>
+    }
+
     @if (products.error()) {
-      <div role="alert" class="alert alert-error">
+      <div role="alert" class="alert alert-error alert-soft">
         Couldn't load products.
         <button class="btn btn-sm" (click)="products.reload()">Try again</button>
       </div>
     } @else if (products.value(); as result) {
-      <div class="overflow-x-auto rounded-box bg-base-100 shadow-sm">
+      <div class="overflow-x-auto border-t border-base-300">
         <table class="table">
           <thead>
-            <tr>
-              <th>Product</th>
-              <th>Category</th>
-              <th class="text-right">Price</th>
-              <th class="text-right">Stock</th>
-              <th>Status</th>
-              <th></th>
+            <tr class="eyebrow border-base-300">
+              <th class="font-medium">Product</th>
+              <th class="font-medium">Category</th>
+              <th class="text-right font-medium">Price</th>
+              <th class="text-right font-medium">Stock</th>
+              <th class="font-medium">Status</th>
+              <th><span class="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
             @for (p of result.items; track p.id) {
-              <tr [class.opacity-50]="!p.isActive">
-                <td>
+              <tr class="border-base-300">
+                <td [class.opacity-55]="!p.isActive">
                   <div class="flex items-center gap-3">
-                    <app-product-image
-                      class="size-10 shrink-0 rounded-md"
-                      [name]="p.name"
-                      [category]="p.category.slug"
-                      [src]="p.imageUrl"
-                    />
+                    <app-product-image class="size-12 shrink-0 rounded-sm" [name]="p.name" [category]="p.category.slug" [src]="p.imageUrl" />
                     <div>
                       <div class="font-medium">{{ p.name }}</div>
-                      <div class="text-xs text-base-content/50">{{ p.slug }}</div>
+                      <div class="text-xs text-muted">{{ p.slug }}</div>
                     </div>
                   </div>
                 </td>
-                <td>{{ p.category.name }}</td>
-                <td class="text-right">{{ p.priceCents | money }}</td>
-                <td class="text-right" [class.text-warning]="p.stock <= 5">{{ p.stock }}</td>
+                <td class="text-muted">{{ p.category.name }}</td>
+                <td class="tabular text-right">{{ p.priceCents | money }}</td>
+                <td class="text-right">
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    class="input input-sm tabular w-20 text-right"
+                    [class.text-accent]="p.stock <= 5"
+                    [value]="p.stock"
+                    [disabled]="stockBusy() === p.id"
+                    [attr.aria-label]="'Stock for ' + p.name"
+                    (change)="saveStock(p, $event)"
+                  />
+                </td>
                 <td>
-                  <span class="badge whitespace-nowrap" [class.badge-success]="p.isActive" [class.badge-ghost]="!p.isActive">
+                  <span
+                    class="badge whitespace-nowrap"
+                    [class.badge-success]="p.isActive"
+                    [class.badge-soft]="p.isActive"
+                    [class.badge-ghost]="!p.isActive"
+                  >
                     {{ p.isActive ? 'Live' : 'Hidden' }}
                   </span>
                 </td>
-                <td><button class="btn btn-ghost btn-xs" (click)="openEditor(p)">Edit</button></td>
+                <td class="text-right"><button class="btn btn-ghost btn-sm" (click)="openEditor(p)">Edit</button></td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="py-8 text-center text-base-content/60">No products found.</td>
+                <td colspan="6" class="py-12 text-center text-muted">No products found.</td>
               </tr>
             }
           </tbody>
@@ -81,9 +99,9 @@ const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
     }
 
     <dialog #editor class="modal" (close)="editing.set(undefined)">
-      <form [formGroup]="form" (ngSubmit)="save()" class="modal-box" novalidate>
-        <h2 class="text-lg font-bold">{{ editing() ? 'Edit product' : 'New product' }}</h2>
-        <fieldset class="fieldset">
+      <form [formGroup]="form" (ngSubmit)="save()" class="modal-box max-w-xl rounded-sm" novalidate>
+        <h2 class="text-3xl">{{ editing() ? 'Edit product' : 'New product' }}</h2>
+        <fieldset class="fieldset mt-4">
           <label class="label" for="p-name">Name</label>
           <input id="p-name" class="input w-full" formControlName="name" />
 
@@ -113,42 +131,49 @@ const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
           <label class="label mt-1" for="p-description">Description</label>
           <textarea id="p-description" class="textarea w-full" rows="3" formControlName="description"></textarea>
 
-          <label class="label mt-1" for="p-photo">Photo</label>
-          <div class="flex items-center gap-3">
+          <span class="label mt-1">Photo</span>
+          <label
+            for="p-photo"
+            class="flex cursor-pointer items-center gap-4 border border-dashed p-3 focus-within:outline-2 focus-within:outline-accent"
+            [class]="dragging() ? 'border-primary bg-base-200' : 'border-base-300'"
+            (dragover)="onDragOver($event)"
+            (dragleave)="dragging.set(false)"
+            (drop)="onDrop($event)"
+          >
             <app-product-image
-              class="size-20 shrink-0 rounded-lg"
+              class="size-20 shrink-0 rounded-sm"
               [name]="form.controls.name.value || 'New product'"
               [category]="form.controls.categorySlug.value"
               [src]="photoPreview() ?? (form.controls.imageUrl.value || null)"
             />
-            <div class="min-w-0 flex-1 space-y-1">
-              <input
-                id="p-photo"
-                type="file"
-                class="file-input file-input-sm w-full"
-                accept="image/jpeg,image/png,image/webp"
-                (change)="onPhotoChosen($event)"
-              />
-              @if (form.controls.imageUrl.value && !photoPreview()) {
-                <button type="button" class="btn btn-ghost btn-xs" [disabled]="saving()" (click)="removePhoto()">
-                  Remove photo
-                </button>
+            <span class="min-w-0 flex-1 text-sm">
+              <span class="flex items-center gap-2 font-medium">
+                <app-icon name="upload" /> Drop a photo here or <span class="underline underline-offset-2">browse</span>
+              </span>
+              <span class="mt-1 block text-xs text-muted">JPEG, PNG, or WebP, up to 5 MB. Large photos are resized.</span>
+              @if (photoName()) {
+                <span class="mt-1 block truncate text-xs text-success">{{ photoName() }} will upload when you save.</span>
               }
-              <p class="text-xs text-base-content/60">JPEG, PNG, or WebP, up to 5 MB. Large photos are resized.</p>
-            </div>
-          </div>
+            </span>
+            <input id="p-photo" type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" (change)="onPhotoChosen($event)" />
+          </label>
+          @if (form.controls.imageUrl.value && !photoPreview()) {
+            <button type="button" class="link-quiet mt-2 self-start text-sm text-muted" [disabled]="saving()" (click)="removePhoto()">
+              Remove photo
+            </button>
+          }
 
-          <label class="label mt-1" for="p-image">Or an image URL</label>
+          <label class="label mt-3" for="p-image">Or an image URL</label>
           <input id="p-image" class="input w-full" formControlName="imageUrl" placeholder="https://" />
 
-          <label class="label mt-2 cursor-pointer gap-2">
+          <label class="label mt-4 cursor-pointer gap-3">
             <input type="checkbox" class="toggle toggle-primary toggle-sm" formControlName="isActive" />
             Visible in the store
           </label>
         </fieldset>
 
         @if (error()) {
-          <div role="alert" class="alert alert-error mt-3 text-sm">{{ error() }}</div>
+          <div role="alert" class="alert alert-error alert-soft mt-4 text-sm">{{ error() }}</div>
         }
 
         <div class="modal-action">
@@ -172,6 +197,13 @@ export class AdminProducts implements OnDestroy {
   /** A photo picked in the form but not uploaded yet, and a local preview of it. */
   private pendingPhoto: File | null = null;
   protected readonly photoPreview = signal<string | null>(null);
+  protected readonly photoName = signal<string | null>(null);
+  protected readonly dragging = signal(false);
+  protected readonly rowError = signal<string | null>(null);
+  protected readonly stockBusy = signal<number | null>(null);
+
+  /** Fires after anything that changes the catalog, so the dashboard numbers can refresh. */
+  readonly changed = output<void>();
 
   protected readonly categories = httpResource<Category[]>(() => '/api/categories');
   protected readonly products = httpResource<Page<Product>>(() => ({
@@ -203,28 +235,67 @@ export class AdminProducts implements OnDestroy {
 
   protected onPhotoChosen(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] ?? null;
+    this.choosePhoto(input.files?.[0] ?? null, input);
+  }
+
+  protected onDragOver(event: DragEvent): void {
+    event.preventDefault(); // allow dropping
+    this.dragging.set(true);
+  }
+
+  protected onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragging.set(false);
+    this.choosePhoto(event.dataTransfer?.files?.[0] ?? null);
+  }
+
+  private choosePhoto(file: File | null, input?: HTMLInputElement): void {
     this.clearPhoto();
     if (!file) return;
     if (!PHOTO_TYPES.includes(file.type)) {
-      input.value = '';
+      if (input) input.value = '';
       this.error.set('Choose a JPEG, PNG, or WebP image.');
       return;
     }
     if (file.size > MAX_PHOTO_BYTES) {
-      input.value = '';
+      if (input) input.value = '';
       this.error.set('That photo is over 5 MB. Choose a smaller one.');
       return;
     }
     this.error.set(null);
     this.pendingPhoto = file;
+    this.photoName.set(file.name);
     this.photoPreview.set(URL.createObjectURL(file));
+  }
+
+  protected async saveStock(product: Product, event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const stock = Number(input.value);
+    if (input.value === '' || !Number.isInteger(stock) || stock < 0 || stock > 1_000_000) {
+      input.value = String(product.stock);
+      this.rowError.set('Stock must be a whole number from 0 to 1,000,000.');
+      return;
+    }
+    if (stock === product.stock) return;
+    this.stockBusy.set(product.id);
+    this.rowError.set(null);
+    try {
+      await this.api.updateProduct(product.id, { stock });
+      this.products.reload();
+      this.changed.emit();
+    } catch (err) {
+      input.value = String(product.stock);
+      this.rowError.set(apiErrorMessage(err));
+    } finally {
+      this.stockBusy.set(null);
+    }
   }
 
   private clearPhoto(): void {
     const preview = this.photoPreview();
     if (preview) URL.revokeObjectURL(preview);
     this.photoPreview.set(null);
+    this.photoName.set(null);
     this.pendingPhoto = null;
   }
 
@@ -239,6 +310,7 @@ export class AdminProducts implements OnDestroy {
     try {
       this.applySaved(await this.api.removeProductImage(editing.id));
       this.products.reload();
+      this.changed.emit();
     } catch (err) {
       this.error.set(apiErrorMessage(err));
     } finally {
@@ -301,6 +373,7 @@ export class AdminProducts implements OnDestroy {
       }
       this.applySaved(saved); // from here on this is an existing product, so a retry updates it
       this.products.reload();
+      this.changed.emit();
 
       if (this.pendingPhoto) {
         try {

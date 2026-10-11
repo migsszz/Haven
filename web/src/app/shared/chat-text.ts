@@ -118,7 +118,7 @@ export function parseChatText(text: string): Block[] {
       } @else if (s.italic) {
         <em>{{ s.text }}</em>
       } @else {
-        {{ s.text }}
+        <span>{{ s.text }}</span>
       }
     </ng-template>
   `,

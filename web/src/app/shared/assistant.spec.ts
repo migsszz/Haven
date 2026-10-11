@@ -1,8 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { AssistantService } from '../core/assistant.service';
 import { CartService } from '../core/cart.service';
 import { AssistantReply, Product } from '../core/models';
 import { Assistant } from './assistant';
@@ -23,16 +24,28 @@ describe('Assistant', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
+    fixture = undefined;
     localStorage.clear();
     TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
     http = TestBed.inject(HttpTestingController);
   });
 
+  let fixture: ComponentFixture<Assistant> | undefined;
+
+  /** One assistant per test, like the app has: the status check is made once by the shared service. */
+  async function panel(): Promise<Assistant> {
+    if (!fixture) {
+      fixture = TestBed.createComponent(Assistant);
+      fixture.detectChanges();
+      http.expectOne('/api/assistant/status').flush({ enabled: true });
+      await fixture.whenStable(); // the resource publishes its value asynchronously
+      fixture.detectChanges();
+    }
+    return fixture.componentInstance;
+  }
+
   async function ask(message: string, reply: AssistantReply) {
-    const fixture = TestBed.createComponent(Assistant);
-    fixture.detectChanges();
-    http.expectOne('/api/assistant/status').flush({ enabled: true });
-    const sending = (fixture.componentInstance as unknown as { send(m: string): Promise<void> }).send(message);
+    const sending = ((await panel()) as unknown as { send(m: string): Promise<void> }).send(message);
     const req = http.expectOne('/api/assistant/chat');
     req.flush(reply);
     await sending;
@@ -71,5 +84,20 @@ describe('Assistant', () => {
     const cart = TestBed.inject(CartService);
     await ask('add a mug', { reply: 'Added.', products: [], actions: [{ type: 'add_to_cart', product: mug, quantity: 2 }] });
     expect(cart.quantityOf(7)).toBe(2);
+  });
+
+  it('sends a question asked from elsewhere on the site, once the assistant is ready', async () => {
+    const service = TestBed.inject(AssistantService);
+    await panel();
+    service.ask('Tell me about the Travel Mug.');
+    fixture!.detectChanges();
+
+    const req = http.expectOne('/api/assistant/chat');
+    expect((req.request.body as { message: string }).message).toBe('Tell me about the Travel Mug.');
+    req.flush({ reply: 'It is a mug.', products: [], actions: [] });
+    await fixture!.whenStable();
+
+    expect(service.open()).toBe(true);
+    expect(service.pendingQuestion()).toBeNull(); // consumed, so it isn't sent twice
   });
 });
