@@ -132,28 +132,45 @@ aws sts get-caller-identity # the Arn line should contain assumed-role/haven-ec2
 
 ### 4b. Create the app's settings file
 
-Replace `ACCOUNT_ID` and `REGION` with yours.
+This file holds your secrets, so write it with a text editor rather than pasting a multi-line command (the browser terminal can mangle those).
 
-```bash
-mkdir -p ~/haven
-cat > ~/haven/.env <<EOF
-JWT_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(48))")
-POSTGRES_PASSWORD=$(python3 -c "import secrets; print(secrets.token_hex(16))")
-HTTP_PORT=80
-IMAGE_PREFIX=ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/haven
-IMAGE_TAG=latest
-EOF
-chmod 600 ~/haven/.env
-```
+1. Generate two secrets, **one command at a time**, and copy each result:
+   ```bash
+   python3 -c "import secrets; print(secrets.token_urlsafe(48))"
+   python3 -c "import secrets; print(secrets.token_hex(16))"
+   ```
+2. Open the editor:
+   ```bash
+   mkdir -p ~/haven
+   nano ~/haven/.env
+   ```
+3. Type or paste these lines, replacing the capitalised words with your own values (no angle brackets, no extra lines):
+   ```
+   JWT_SECRET=FIRST_SECRET
+   POSTGRES_PASSWORD=SECOND_SECRET
+   HTTP_PORT=80
+   IMAGE_PREFIX=ACCOUNT_ID.dkr.ecr.REGION.amazonaws.com/haven
+   IMAGE_TAG=latest
+   ```
+4. Save and exit: **Ctrl+O**, **Enter**, **Ctrl+X**.
+5. Lock the file and check its shape. This prints only the variable names, never the secrets:
+   ```bash
+   chmod 600 ~/haven/.env
+   cut -d= -f1 ~/haven/.env
+   ```
+   You should see exactly `JWT_SECRET`, `POSTGRES_PASSWORD`, `HTTP_PORT`, `IMAGE_PREFIX`, `IMAGE_TAG`, one per line.
 
 Notes:
 - `POSTGRES_PASSWORD` is letters and digits on purpose: it's placed inside a database URL, so characters like `@` or `/` would break it.
-- The password is only applied the **first** time the database starts. Set it before the first deploy; changing it later does not change the existing database.
+- The password is only applied the **first** time the database starts. Set it before the first deploy; changing it later does not change the existing database. (To start over on a new server with no data worth keeping, `docker compose down -v` resets it.)
 - `IMAGE_PREFIX` and `IMAGE_TAG` let you run `docker compose` by hand on the server later. During a deploy, CI overrides `IMAGE_TAG` with the exact commit.
 
-**Optional: turn on the shopping assistant.** Add your OpenAI key (never commit it):
-```bash
-echo 'OPENAI_API_KEY=sk-...' >> ~/haven/.env
+> **Never paste your `.env`, API keys, passwords, or private keys into a chat, an issue, or a screenshot.** If one leaks, revoke it and make a new one straight away. Use `cut -d= -f1 ~/haven/.env` (names only) whenever you need to show someone the file's shape.
+
+**Optional: turn on the shopping assistant.** Create an API key at https://platform.openai.com/api-keys, then add two more lines with `nano ~/haven/.env`:
+```
+OPENAI_API_KEY=YOUR_NEW_KEY
+OPENAI_MODEL=gpt-6-luna
 ```
 Without a key the site works normally and the chat button simply doesn't appear.
 
