@@ -62,7 +62,9 @@ const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
                 <td class="text-right">{{ p.priceCents | money }}</td>
                 <td class="text-right" [class.text-warning]="p.stock <= 5">{{ p.stock }}</td>
                 <td>
-                  <span class="badge badge-sm" [class.badge-success]="p.isActive">{{ p.isActive ? 'Live' : 'Hidden' }}</span>
+                  <span class="badge whitespace-nowrap" [class.badge-success]="p.isActive" [class.badge-ghost]="!p.isActive">
+                    {{ p.isActive ? 'Live' : 'Hidden' }}
+                  </span>
                 </td>
                 <td><button class="btn btn-ghost btn-xs" (click)="openEditor(p)">Edit</button></td>
               </tr>
