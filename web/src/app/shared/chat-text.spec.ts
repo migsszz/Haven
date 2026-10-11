@@ -70,4 +70,9 @@ describe('ChatText', () => {
     expect(el.querySelector('script')).toBeNull();
     expect(el.textContent).toContain('<script>alert(1)</script>');
   });
+
+  it('adds no stray spaces around bold text', () => {
+    const el = render('options under **$40**: take your pick');
+    expect(el.textContent?.trim()).toBe('options under $40: take your pick');
+  });
 });

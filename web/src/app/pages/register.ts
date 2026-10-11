@@ -10,10 +10,11 @@ import { safeReturnUrl } from './login';
   selector: 'app-register',
   imports: [ReactiveFormsModule, RouterLink],
   template: `
-    <div class="mx-auto max-w-sm rounded-box bg-base-100 p-6 shadow-sm">
-      <h1 class="text-2xl font-bold">Create an account</h1>
+    <div class="mx-auto max-w-sm py-6 sm:py-12">
+      <p class="eyebrow">Join Haven</p>
+      <h1 class="mt-3 text-4xl">Create an account</h1>
 
-      <form [formGroup]="form" (ngSubmit)="submit()" class="mt-4" novalidate>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="mt-8" novalidate>
         <fieldset class="fieldset">
           <label class="label" for="name">Name</label>
           <input id="name" class="input w-full" formControlName="name" autocomplete="name" />
@@ -31,10 +32,10 @@ import { safeReturnUrl } from './login';
         </fieldset>
 
         @if (error()) {
-          <div role="alert" class="alert alert-error mt-3 text-sm">{{ error() }}</div>
+          <div role="alert" class="alert alert-error alert-soft mt-4 text-sm">{{ error() }}</div>
         }
 
-        <button class="btn btn-primary mt-4 w-full" [disabled]="submitting()">
+        <button class="btn btn-primary mt-6 w-full" [disabled]="submitting()">
           @if (submitting()) {
             <span class="loading loading-spinner loading-sm"></span>
           }
@@ -42,9 +43,9 @@ import { safeReturnUrl } from './login';
         </button>
       </form>
 
-      <p class="mt-4 text-center text-sm">
+      <p class="mt-8 border-t border-base-300 pt-6 text-center text-sm text-muted">
         Already have an account?
-        <a routerLink="/login" [queryParams]="{ returnUrl: returnUrl() }" class="link link-primary">Sign in</a>
+        <a routerLink="/login" [queryParams]="{ returnUrl: returnUrl() }" class="link-quiet font-medium text-base-content underline">Sign in</a>
       </p>
     </div>
   `,

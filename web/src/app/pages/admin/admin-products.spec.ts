@@ -22,6 +22,9 @@ interface Internals {
   save(): Promise<void>;
   removePhoto(): Promise<void>;
   onPhotoChosen(e: Event): void;
+  onDrop(e: DragEvent): void;
+  saveStock(p: Product, e: Event): Promise<void>;
+  rowError(): string | null;
   form: { patchValue(v: object): void; controls: { imageUrl: { value: string } } };
   error(): string | null;
 }
@@ -119,5 +122,47 @@ describe('AdminProducts photos', () => {
     // The open form no longer holds the old URL, so the next Save can't put it back.
     expect(page.form.controls.imageUrl.value).toBe('');
     expect(page.error()).toBeNull();
+  });
+
+  it('accepts a photo dropped on the form, and refuses one of the wrong type', () => {
+    const page = setup();
+    page.openEditor(mat);
+    const drop = (file: File) => page.onDrop({ preventDefault: () => undefined, dataTransfer: { files: [file] } } as unknown as DragEvent);
+
+    drop(photo());
+    expect(page.error()).toBeNull();
+
+    drop(new File(['<svg/>'], 'a.svg', { type: 'image/svg+xml' }));
+    expect(page.error()).toContain('JPEG, PNG, or WebP');
+  });
+
+  it('saves a stock change straight from the table', async () => {
+    const page = setup();
+    const input = { value: '12' } as HTMLInputElement;
+
+    const saving = page.saveStock(mat, { target: input } as unknown as Event);
+    const req = http.expectOne({ method: 'PATCH', url: '/api/admin/products/4' });
+    expect(req.request.body).toEqual({ stock: 12 });
+    req.flush({ ...mat, stock: 12 });
+    await saving;
+
+    expect(page.rowError()).toBeNull();
+  });
+
+  it('puts the old number back, and says why, when the stock is not a valid count', async () => {
+    const page = setup();
+    for (const bad of ['-1', '2.5', '', 'abc']) {
+      const input = { value: bad } as HTMLInputElement;
+      await page.saveStock(mat, { target: input } as unknown as Event);
+      expect(input.value).toBe(String(mat.stock));
+      expect(page.rowError()).toContain('whole number');
+    }
+    http.expectNone((r) => r.method === 'PATCH');
+  });
+
+  it('does nothing when the number has not changed', async () => {
+    const page = setup();
+    await page.saveStock(mat, { target: { value: String(mat.stock) } } as unknown as Event);
+    http.expectNone((r) => r.method === 'PATCH');
   });
 });

@@ -18,7 +18,8 @@ Payments are simulated. It's a demo store, so no card details are collected.
 - Built on OpenAI (`gpt-6-luna` by default) with tool calling. Optional: without `OPENAI_API_KEY` the panel stays hidden.
 
 **Admins**
-- Create, edit, reprice, restock, and hide products, with photo upload (JPEG, PNG, or WebP up to 5 MB).
+- A dashboard of headline numbers (orders awaiting shipment, in transit, low stock, live products, revenue), counted by the API across every order and product.
+- Create, edit, reprice, and hide products, with photo upload by drag and drop or file picker (JPEG, PNG, or WebP up to 5 MB). Stock can be edited straight from the table.
 - Move orders through `placed → shipped → delivered`, or cancel them (which puts the stock back).
 
 ## Architecture
@@ -52,6 +53,7 @@ The browser only talks to one origin: nginx serves the Angular build and forward
 - **Constraints in the database, not just the code.** `CHECK (stock >= 0)`, `CHECK (quantity > 0)`, and an enum for order status back up the application checks.
 - **Order status is a small state machine.** Allowed transitions are listed in one place (`TRANSITIONS` in [api/app/orders.py](api/app/orders.py)), and invalid moves return `409`.
 - **Photos are re-encoded, not stored as sent.** An upload is decoded, rotated upright, shrunk to 1600 px, and saved as WebP under a random name ([api/app/uploads.py](api/app/uploads.py)). That means the type is what the bytes really are (no SVG or script renamed to `.png`), camera metadata such as GPS is dropped, and a new photo gets a new URL, so the old ones can be cached forever. Files live on a Docker volume that nginx serves directly. Only admins can upload, and deleting only ever touches files the app created.
+- **A quiet, editorial look.** A serif (Fraunces) for headings and a sans (Inter) for the interface, both self-hosted so the site makes no third-party requests; warm paper and near-black ink with one terracotta accent; hairline rules instead of cards and shadows; photos do the visual work. Every colour, radius, and border lives in the two themes in [web/src/styles.css](web/src/styles.css) (light, and dark following the system setting). Text contrast is at least 4.5:1 in both, there's a visible keyboard focus ring and a skip link, touch targets are 44px, and motion respects the reduced-motion setting.
 - **Safe dynamic SQL.** Sort keys are whitelisted, and every value is a bound parameter.
 
 ### The assistant

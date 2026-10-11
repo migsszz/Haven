@@ -78,3 +78,12 @@ export interface ApiErrorBody {
   details?: { field: string; message: string }[];
   problems?: StockProblem[];
 }
+
+/** Headline numbers for the admin dashboard (GET /api/admin/summary). */
+export interface AdminSummary {
+  ordersByStatus: Record<OrderStatus, number>;
+  revenueCents: number;
+  liveProducts: number;
+  hiddenProducts: number;
+  lowStockProducts: number;
+}

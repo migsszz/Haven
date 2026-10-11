@@ -3,42 +3,79 @@
   themes: false;
 }
 
+/* Fonts are self-hosted (latin only), so the site makes no third-party requests. */
+@font-face {
+  font-family: 'Fraunces Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(../node_modules/@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2) format('woff2-variations');
+}
+@font-face {
+  font-family: 'Fraunces Variable';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(../node_modules/@fontsource-variable/fraunces/files/fraunces-latin-wght-italic.woff2) format('woff2-variations');
+}
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2) format('woff2-variations');
+}
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  /* Secondary text. Checked for contrast (4.5:1 or better) against the page background in both themes. */
+  --color-muted: var(--haven-muted);
+}
+
+/*
+ * Haven: a quiet, editorial look. Warm paper, near-black ink, one terracotta accent, hairline rules, and
+ * almost no rounding or shadow, so the photos do the work.
+ *
+ * daisyUI sizes borders, field heights and badge padding from --border, --size-field and --size-selector;
+ * a theme that omits them gets inputs with no outline and badges with no padding.
+ */
 @plugin 'daisyui/theme' {
   name: 'haven';
   default: true;
   prefersdark: false;
   color-scheme: light;
 
-  --color-base-100: #ffffff;
-  --color-base-200: #f5f6fa;
-  --color-base-300: #e4e7ef;
-  --color-base-content: #1b1f2a;
-  --color-primary: #4f46e5;
-  --color-primary-content: #ffffff;
-  --color-secondary: #0f9488;
-  --color-secondary-content: #ffffff;
-  --color-accent: #f59e0b;
-  --color-accent-content: #1b1f2a;
-  --color-neutral: #2b3040;
-  --color-neutral-content: #f5f6fa;
-  --color-info: #3b82c4;
+  --color-base-100: #fbf9f5;
+  --color-base-200: #f2eee7;
+  --color-base-300: #dcd5c9;
+  --color-base-content: #1c1a17;
+  --color-primary: #1c1a17;
+  --color-primary-content: #fbf9f5;
+  --color-secondary: #4a463f;
+  --color-secondary-content: #fbf9f5;
+  --color-accent: #a8481f;
+  --color-accent-content: #ffffff;
+  --color-neutral: #1c1a17;
+  --color-neutral-content: #fbf9f5;
+  --color-info: #3a6584;
   --color-info-content: #ffffff;
-  --color-success: #2f8f5b;
+  --color-success: #2b6648;
   --color-success-content: #ffffff;
-  --color-warning: #c98a1b;
+  --color-warning: #8f610f;
   --color-warning-content: #ffffff;
-  --color-error: #c63d3d;
+  --color-error: #a93a2a;
   --color-error-content: #ffffff;
-  --radius-box: 1rem;
-  --radius-field: 0.6rem;
-  --radius-selector: 0.6rem;
-  /* daisyUI sizes borders, field heights and badge padding from these. Without them inputs have
-     no outline, badges have no padding, and buttons fall back to the browser's thick border. */
+  --radius-box: 0.375rem;
+  --radius-field: 0.25rem;
+  --radius-selector: 0.25rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
   --depth: 0;
   --noise: 0;
+  --haven-muted: #6a655c;
+  --haven-tone-mix: 55%;
 }
 
 @plugin 'daisyui/theme' {
@@ -47,36 +84,36 @@
   prefersdark: true;
   color-scheme: dark;
 
-  --color-base-100: #15171e;
-  --color-base-200: #1c1f28;
-  --color-base-300: #2a2e3a;
-  --color-base-content: #e8eaf2;
-  --color-primary: #8b85ff;
-  --color-primary-content: #15171e;
-  --color-secondary: #34c3b3;
-  --color-secondary-content: #15171e;
-  --color-accent: #fbbf24;
-  --color-accent-content: #15171e;
-  --color-neutral: #2a2e3a;
-  --color-neutral-content: #e8eaf2;
-  --color-info: #6aa8e0;
-  --color-info-content: #1d1a19;
-  --color-success: #5cbf88;
-  --color-success-content: #1d1a19;
-  --color-warning: #e3aa45;
-  --color-warning-content: #1d1a19;
-  --color-error: #e06b6b;
-  --color-error-content: #1d1a19;
-  --radius-box: 1rem;
-  --radius-field: 0.6rem;
-  --radius-selector: 0.6rem;
-  /* daisyUI sizes borders, field heights and badge padding from these. Without them inputs have
-     no outline, badges have no padding, and buttons fall back to the browser's thick border. */
+  --color-base-100: #141311;
+  --color-base-200: #1d1c19;
+  --color-base-300: #36332e;
+  --color-base-content: #ece8e0;
+  --color-primary: #ece8e0;
+  --color-primary-content: #141311;
+  --color-secondary: #c9c3b6;
+  --color-secondary-content: #141311;
+  --color-accent: #e58a5b;
+  --color-accent-content: #141311;
+  --color-neutral: #ece8e0;
+  --color-neutral-content: #141311;
+  --color-info: #7aa9cc;
+  --color-info-content: #141311;
+  --color-success: #6dbf94;
+  --color-success-content: #141311;
+  --color-warning: #dcaa4c;
+  --color-warning-content: #141311;
+  --color-error: #e57d6c;
+  --color-error-content: #141311;
+  --radius-box: 0.375rem;
+  --radius-field: 0.25rem;
+  --radius-selector: 0.25rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
   --depth: 0;
   --noise: 0;
+  --haven-muted: #a39d90;
+  --haven-tone-mix: 16%;
 }
 
 html,
@@ -85,5 +122,101 @@ body {
 }
 
 body {
-  @apply bg-base-200 text-base-content antialiased;
+  @apply bg-base-100 font-sans text-base-content antialiased;
+  font-feature-settings: 'cv11', 'ss01';
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    font-optical-sizing: auto;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-accent) 30%, transparent);
+  }
+
+  /* A clear keyboard focus ring everywhere, in the accent colour. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Form fields keep their own outline; give them an accent border on focus instead of a second ring. */
+  .input:focus-within,
+  .select:focus,
+  .textarea:focus {
+    outline-offset: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Small uppercase label used above titles and for categories. */
+  .eyebrow {
+    @apply text-xs font-medium tracking-[0.14em] text-muted uppercase;
+  }
+
+  /* A text link that underlines on hover, for navigation and quiet actions. */
+  .link-quiet {
+    @apply underline-offset-4 hover:underline;
+  }
+
+  /* Hairline rule, in the theme's border colour. */
+  .rule {
+    @apply border-base-300 border-t;
+  }
+
+  /* Buttons are plain rectangles; on touch screens they get a 44px target. */
+  .btn {
+    @apply font-medium tracking-wide;
+  }
+  @media (pointer: coarse) {
+    .btn:not(.btn-xs):not(.btn-sm) {
+      min-height: 2.75rem;
+    }
+    .btn-sm {
+      min-height: 2.5rem;
+    }
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Product photos zoom a touch on hover (only where there is a hover, and not for reduced motion). */
+  .photo img {
+    transition: transform 0.6s ease;
+  }
+  @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .group:hover .photo img {
+      transform: scale(1.03);
+    }
+  }
+
+  /* The quick-add button appears on hover or keyboard focus, and is always there on touch screens. */
+  @media (hover: hover) {
+    .quick-add {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+    .group:hover .quick-add,
+    .quick-add:focus-visible {
+      opacity: 1;
+    }
+  }
 }
