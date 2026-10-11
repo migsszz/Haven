@@ -8,6 +8,7 @@ import { ApiService, apiErrorMessage } from '../core/api.service';
 import { AuthService } from '../core/auth.service';
 import { CartService } from '../core/cart.service';
 import { AssistantAction, AssistantReply, Product } from '../core/models';
+import { ChatText } from './chat-text';
 import { MoneyPipe } from './money.pipe';
 import { ProductImage } from './product-image';
 
@@ -25,7 +26,7 @@ const SUGGESTIONS = ['Gift ideas under $40', "What's in my cart?", "Where's my l
 
 @Component({
   selector: 'app-assistant',
-  imports: [FormsModule, RouterLink, MoneyPipe, ProductImage],
+  imports: [FormsModule, RouterLink, MoneyPipe, ProductImage, ChatText],
   template: `
     @if (status.value()?.enabled) {
       @if (open()) {
@@ -45,10 +46,13 @@ const SUGGESTIONS = ['Gift ideas under $40', "What's in my cart?", "Where's my l
           <div #scroller class="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
             @for (m of messages(); track $index) {
               <div class="chat" [class.chat-end]="m.role === 'user'" [class.chat-start]="m.role === 'assistant'">
-                <div
-                  class="chat-bubble whitespace-pre-line text-sm"
-                  [class.chat-bubble-primary]="m.role === 'user'"
-                >{{ m.text }}</div>
+                <div class="chat-bubble text-sm" [class.chat-bubble-primary]="m.role === 'user'">
+                  @if (m.role === 'assistant') {
+                    <app-chat-text [text]="m.text" />
+                  } @else {
+                    <span class="whitespace-pre-line">{{ m.text }}</span>
+                  }
+                </div>
               </div>
 
               @for (p of m.products ?? []; track p.id) {
