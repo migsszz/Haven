@@ -7,6 +7,15 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script>
+    // Apply a saved light/dark choice before the first paint, so there is no flash of the wrong theme.
+    try {
+      var saved = JSON.parse(localStorage.getItem('haven.theme'));
+      if (saved === 'light' || saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', saved === 'dark' ? 'haven-dark' : 'haven');
+      }
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <app-root></app-root>
