@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Haven: a bold H on an ink square, with the terracotta dot from the wordmark. Light on dark tabs, dark on light. -->
+  <style>
+    .bg { fill: #1c1a17 }
+    .fg { fill: #fbf9f5 }
+    .dot { fill: #c9552a }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #f2eee7 }
+      .fg { fill: #1c1a17 }
+    }
+  </style>
+  <rect class="bg" width="32" height="32" rx="7"/>
+  <path class="fg" d="M9 8h3.5v6.5h7V8H23v16h-3.5v-6.5h-7V24H9z"/>
+  <circle class="dot" cx="26.2" cy="25.2" r="2.2"/>
+</svg>
