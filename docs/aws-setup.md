@@ -274,7 +274,7 @@ On the same page, open the **Variables** tab → **New repository variable**:
 
 It's a **variable**, not a secret. This is the switch that enables the deploy job.
 
-Now push any commit to `main`, or start it by hand: open the repo's **Actions** tab, click **CI** in the left sidebar, press **Run workflow** (on the right), keep the branch set to `main`, and press the green **Run workflow** button. The pipeline runs the tests, builds and pushes both images to ECR, copies `docker-compose.yml` and the database scripts to the server, and starts the stack.
+Now push any commit to `main`, or open **Actions → CI → Re-run all jobs**. The pipeline runs the tests, builds and pushes both images to ECR, copies `docker-compose.yml` and the database scripts to the server, and starts the stack.
 
 ✅ **Checkpoint:** the **Build images and deploy to AWS** job turns green, and `http://YOUR_ELASTIC_IP` shows Haven.
 
@@ -318,9 +318,9 @@ docker compose ps
 docker compose logs -f api
 ```
 
-**Redeploy:** push to `main`, or press **Actions → CI → Run workflow** (branch `main`) to deploy again without a code change. To restart by hand, run `docker compose pull api web && docker compose up -d --no-build`.
+**Redeploy:** push to `main`. To restart by hand, run `docker compose pull api web && docker compose up -d --no-build`.
 
-**Roll back:** every image is tagged with its commit. Either run **Actions → CI → Run workflow** and paste the full 40-character ID of an older, good commit into the box (the tests run on it first), or on the server run `IMAGE_TAG=<older commit sha> docker compose up -d --no-build`.
+**Roll back:** every image is tagged with its commit. Either re-run the deploy job on an older commit in the Actions tab, or on the server run `IMAGE_TAG=<older commit sha> docker compose up -d --no-build`.
 
 **Back up your data.** Two Docker volumes hold everything that isn't code:
 ```bash
