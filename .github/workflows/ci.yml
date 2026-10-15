@@ -4,14 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-  # The "Run workflow" button on the Actions tab. Pick the main branch there. Optionally give the full ID of an
-  # older commit to put it back (a rollback). The tests run first either way.
-  workflow_dispatch:
-    inputs:
-      ref:
-        description: Full commit ID (40 characters), tag, or branch to deploy. Leave empty for the latest main.
-        required: false
-        default: ''
 
 permissions:
   contents: read
@@ -36,8 +28,6 @@ jobs:
         working-directory: api
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -56,8 +46,6 @@ jobs:
         working-directory: web
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -71,30 +59,16 @@ jobs:
   deploy:
     name: Build images and deploy to AWS
     needs: [api, web]
-    # Runs on a push to main, or when started by hand from main. Skipped until the AWS variables are configured
-    # (see README, "Deploying to AWS"). It has to be main: the AWS role only trusts that branch.
-    if: >-
-      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-      && github.ref == 'refs/heads/main' && vars.AWS_REGION != ''
+    # Skipped until the AWS variables are configured (see README, "Deploying to AWS").
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.AWS_REGION != ''
     runs-on: ubuntu-latest
     permissions:
       contents: read
       id-token: write # lets GitHub assume the AWS role without long-lived keys
-    # Never two deploys at once; a second one waits for the first to finish.
-    concurrency:
-      group: deploy-production
-      cancel-in-progress: false
+    env:
+      IMAGE_TAG: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref || github.sha }}
-
-      # Tag the images with the commit that was actually checked out, which differs from the workflow's own
-      # commit when an older ref is being deployed.
-      - name: Work out what is being deployed
-        run: |
-          echo "IMAGE_TAG=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
-          echo "Deploying $(git log -1 --format='%h %s')" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:

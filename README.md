@@ -145,8 +145,6 @@ One-time setup:
 4. **GitHub settings:** add the variable `AWS_REGION`, and the secrets `AWS_DEPLOY_ROLE_ARN`, `EC2_HOST`, `EC2_USER`, and `EC2_SSH_KEY`.
 5. Push to `main`. After the first deploy, create an admin with `docker compose exec api flask --app wsgi create-admin …` on the instance.
 
-**Deploying by hand.** You don't have to push to deploy. In GitHub go to **Actions → CI → Run workflow**, choose the `main` branch, and press the button. It runs the tests, then deploys. To roll back, paste the full 40-character ID of an older commit into the box (copy it from the commit's page on GitHub); that commit is tested, built, and deployed in place of the latest. The branch has to be `main`, because the AWS role only trusts that branch, and two deploys never run at once.
-
 > [!NOTE]
 > Set an AWS billing alert. A `t3.small` instance plus its public IP costs roughly $15-25 a month. Stop it when you're not using it.
 
